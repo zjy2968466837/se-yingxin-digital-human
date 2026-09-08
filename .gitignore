@@ -39,3 +39,4 @@ application-local.yml
 .env
 .env.*
 *.local
+.env.prod
