@@ -1,0 +1,35 @@
+# 引擎/构建产物
+[Bb]uild/
+[Dd]ist/
+[Ll]ibrary/
+[Oo]bj/
+[Tt]emp/
+*.apk
+*.aab
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Unity
+*.csproj
+*.sln
+*.user
+*.pidb
+*.booproj
+.vs/
+.idea/
+ExportedObj/
+
+# Godot
+.godot/
+*.translation
+
+# 语言/工具
+__pycache__/
+node_modules/
+.venv/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
