@@ -39,5 +39,6 @@ application-local.yml
 application-prod.yml
 .env
 .env.*
+!backend/.env.example
 *.local
 .env.prod

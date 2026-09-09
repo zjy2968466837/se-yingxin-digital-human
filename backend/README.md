@@ -6,7 +6,10 @@ Java 17 + Spring Boot 3 微服务架构。
 
 ```
 backend/
-├── docker-compose.yml        # 本地 MySQL 8 + Redis 7
+├── docker-compose.yml        # 本地 Redis 7（仅开发缓存）
+├── .env.example              # 环境变量模板（可提交）
+├── application-dev.example.yml
+├── application-prod.example.yml
 ├── init-sql/                 # 首次启动自动执行的建库建表脚本
 └── services/                 # 微服务（Maven 多模块，骨架待建）
     ├── gateway/              # API 网关（8080）
@@ -26,7 +29,7 @@ backend/
 - 数据库：`yingxin` 库内按服务分表（课程项目规模不拆多库），Redis 缓存热点问答
 - 接口：RESTful + WebSocket（数字人实时交互）
 - 文档：每个服务集成 springdoc，路径 `/swagger-ui.html`
-- 配置：`application.yml` 放公共配置，敏感信息放 `application-local.yml`（已 gitignore）
+- 配置：公共配置放 `application.yml`，环境差异用 `application-*.yml` + `.env` 注入；敏感信息不入库
 
 ## Maven 阿里云镜像
 
@@ -46,6 +49,7 @@ backend/
 
 ## 启动顺序
 
-1. `docker compose up -d`（backend/ 目录下）
-2. `services/gateway`
-3. 其余按需启动
+1. 复制模板：`cp .env.example .env`，按开发环境填 Azure 开发库连接信息
+2. `docker compose up -d`（backend/ 目录下，仅启动本地 Redis）
+3. 启动 `services/gateway`
+4. 其余按需启动

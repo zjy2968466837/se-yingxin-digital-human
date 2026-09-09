@@ -3,8 +3,8 @@
 ## 环境准备
 
 ```bash
-git clone https://github.com/zjy2968466837/se-course-game.git
-cd se-course-game
+git clone https://github.com/zjy2968466837/se-yingxin-digital-human.git
+cd se-yingxin-digital-human
 git checkout dev
 git checkout -b feat/你的功能名
 ```
@@ -13,8 +13,8 @@ git checkout -b feat/你的功能名
 
 采用 Conventional Commits：
 
-- `feat: 新增跳跃判定` —— 新功能
-- `fix: 修复碰撞检测穿透` —— 缺陷修复
+- `feat: 新增迎新流程节点配置` —— 新功能
+- `fix: 修复问答检索结果为空问题` —— 缺陷修复
 - `docs: 更新需求文档` —— 文档
 - `refactor:` `test:` `chore:` 同理
 
