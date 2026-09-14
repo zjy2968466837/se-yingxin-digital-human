@@ -1,0 +1,36 @@
+# 统一换行符与文本属性
+#
+# 背景：本项目成员可能在 Windows 或 WSL 下开发。若不做约束，Windows 成员以 CRLF 提交后，
+# Linux/WSL 成员拉取会看到"全文件改动"，shell 脚本还会直接不可执行（bad interpreter: /bin/bash^M）。
+# 这里在仓库层强制：入库一律 LF，工作区一律 LF，Windows 成员无需任何额外配置。
+
+# 默认：自动识别文本文件，且统一用 LF
+* text=auto eol=lf
+
+# Windows 专用脚本保留 CRLF（cmd.exe 对 LF 行尾的 .cmd/.bat 支持不佳）
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Linux/macOS/WSL 脚本必须 LF
+*.sh  text eol=lf
+mvnw  text eol=lf
+
+# 二进制文件禁止做换行符转换（Git 多数能自动识别，这里显式声明关键类型）
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.jar  binary
+*.zip  binary
+*.gz   binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary
+*.pdf  binary
+
+# 锁文件为生成物，在 GitHub 上折叠显示
+frontend/*/pnpm-lock.yaml linguist-generated=true

@@ -42,15 +42,16 @@ backend/
 
 ## 构建与运行
 
+统一用仓库自带的 Maven Wrapper，**不需要自己装 Maven**（会自动下载固定版本 3.9.12）：
+
 ```bash
 cd backend
-mvn clean install -DskipTests      # 首次构建（父 POM 会聚合全部 9 个模块）
-
-# 启动网关
-cd services/gateway && mvn spring-boot:run
-# 启动业务服务（示例）
-cd services/auth-service && mvn spring-boot:run
+./mvnw clean install -DskipTests              # 首次构建（父 POM 聚合全部 9 个模块）
+./mvnw -pl services/gateway spring-boot:run   # 启动网关
+./mvnw -pl services/auth-service spring-boot:run   # 启动业务服务（示例）
 ```
+
+Windows CMD / PowerShell 下把 `./mvnw` 换成 `mvnw.cmd`。
 
 也可直接跑打包后的可执行 jar：
 
@@ -101,24 +102,24 @@ java -jar services/gateway/target/gateway-1.0.0-SNAPSHOT.jar
 
 ## Maven 阿里云镜像
 
-`~/.m2/settings.xml` 缺失或下载慢时：
+国内直连 Maven 中央仓库很慢，建议配置一次镜像（只需做一次，是用户级配置）：
 
-```xml
-<settings>
-  <mirrors>
-    <mirror>
-      <id>aliyun</id>
-      <mirrorOf>central</mirrorOf>
-      <url>https://maven.aliyun.com/repository/public</url>
-    </mirror>
-  </mirrors>
-</settings>
+```bash
+# WSL / Linux / macOS
+mkdir -p ~/.m2 && cp docs/maven-settings.xml ~/.m2/settings.xml
 ```
+
+Windows 则把 `docs/maven-settings.xml` 复制到 `C:\Users\<用户名>\.m2\settings.xml`。
+若已有该文件，请手工合并 `<mirror>` 段而非覆盖。
+
+> Maven 自身的安装包走的是 `backend/.mvn/wrapper/maven-wrapper.properties`（已指向阿里云），
+> 与本镜像配置是两件事。
 
 ## 启动顺序
 
 1. `docker compose up -d`（backend/ 目录下，起本地 MySQL + Redis）
-2. `services/gateway`
+2. `./mvnw -pl services/gateway spring-boot:run`
 3. 其余按需启动
 
+环境一致性约定与版本清单见 [../docs/开发环境版本.md](../docs/开发环境版本.md)，
 云上部署见 [../docs/部署指南.md](../docs/部署指南.md)。

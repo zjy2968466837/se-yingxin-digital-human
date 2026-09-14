@@ -1,0 +1,87 @@
+name: build
+
+# 目的：在干净环境里验证"新成员克隆后能否从零构建成功"。
+# 这同时能暴露环境一致性问题（版本钉错、锁文件与实际依赖不一致、缺文件等）。
+#
+# 注意：CI 里没有配置 ~/.m2/settings.xml（即没有阿里云镜像），依赖直接从 Maven Central 下载。
+# 这是有意的——可以顺带验证构建没有偷偷依赖本地镜像配置。
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+# 同一分支上的新推送会取消上一轮未完成的运行，节省 Actions 额度
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: 后端构建（JDK 17 + ./mvnw）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 安装 JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      # 用 ./mvnw 而非 mvn：Maven 版本由仓库固定，不依赖 runner 预装版本
+      - name: 构建全部 9 个模块
+        working-directory: backend
+        run: ./mvnw -B clean install -DskipTests
+
+  admin-web:
+    name: 管理后台构建
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.4.1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/admin-web/pnpm-lock.yaml
+
+      # --frozen-lockfile：锁文件与 package.json 不一致时直接失败，
+      # 防止 CI 静默改锁文件而掩盖版本漂移
+      - name: 安装依赖
+        working-directory: frontend/admin-web
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建
+        working-directory: frontend/admin-web
+        run: pnpm build
+
+  miniprogram:
+    name: 小程序构建
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.4.1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/miniprogram/pnpm-lock.yaml
+
+      - name: 安装依赖
+        working-directory: frontend/miniprogram
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建微信小程序
+        working-directory: frontend/miniprogram
+        run: pnpm build:mp-weixin

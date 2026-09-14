@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "迎新数字人系统 - 小程序端（uni-app + Vue3）",
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "pnpm": ">=11"
+  },
   "scripts": {
     "dev:mp-weixin": "uni -p mp-weixin",
     "build:mp-weixin": "uni build -p mp-weixin",

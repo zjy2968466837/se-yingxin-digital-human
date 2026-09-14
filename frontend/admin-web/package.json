@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "description": "迎新数字人系统 - 管理后台",
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "pnpm": ">=11"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

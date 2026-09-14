@@ -30,7 +30,12 @@
 ## 文档索引
 
 - [环境搭建指南](docs/环境搭建指南.md) ← **新人先看这个**
-- [部署指南](docs/部署指南.md)（本地开发 → 云 ECS）
+- [开发环境版本](docs/开发环境版本.md)（版本清单与一致性约定）
+- [部署指南](docs/部署指南.md)（本地开发 → Azure 云部署）
 - [需求规格说明书](docs/需求规格说明书.md)
 - [项目计划](docs/项目计划.md)
 - [贡献指南](CONTRIBUTING.md)
+
+> 环境一致性已由仓库内的机器可读配置保证：`.gitattributes`（换行符）、`.editorconfig`（编码缩进）、
+> `.nvmrc`/`.node-version`（Node）、`.tool-versions`（JDK/Node）、`backend/mvnw`（Maven）、
+> 前端 `packageManager` + 锁文件。CI 会在推送与 PR 时于干净环境验证构建。

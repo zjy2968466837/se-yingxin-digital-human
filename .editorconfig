@@ -1,0 +1,33 @@
+# 编辑器统一约定，配合 .gitattributes 保证跨平台一致
+# VS Code / IntelliJ IDEA / Vim 等主流编辑器均原生支持
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.java]
+indent_size = 4
+
+[*.xml]
+indent_size = 4
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+# Markdown 用行尾双空格表示换行，不能裁剪
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+
+[*.{cmd,bat}]
+end_of_line = crlf
+
+[*.sh]
+end_of_line = lf

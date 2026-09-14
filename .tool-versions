@@ -1,0 +1,10 @@
+# 工具链版本声明（mise / asdf 等版本管理器会读取）
+#
+# 说明：这是"声明"而非"强制"。装了 mise/asdf 的成员执行 `mise install` 即可自动装齐；
+# 没装的成员不受影响，按 docs/开发环境版本.md 手动装对应版本即可。
+#
+# JDK 只要求大版本 17（Oracle / Temurin / OpenJDK 任一实现均可），
+# 因此这里不锁到具体构建号；用 JDK 21 也能构建（pom 里 release=17），不会被阻断。
+
+java    17.0.20
+nodejs  22.22.1
