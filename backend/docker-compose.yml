@@ -1,28 +1,47 @@
-version: "3.9"
+# 本地开发基础设施：MySQL 8.0 + Redis 7.0
+#
+# 镜像版本刻意与云端保持一致（2026-09 实测）：
+#   - 云端 MySQL：Azure Database for MySQL Flexible Server，SELECT VERSION() = 8.0.46-azure
+#   - 云端 Redis：Azure Linux VM 上的 systemd 服务，INFO server = 7.0.15
+# 升级版本时请同时核对云端，避免「本地能跑、云上报错」。
+#
+# 用法：docker compose up -d
 
 services:
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0.46
     container_name: yingxin-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: yingxin
       MYSQL_USER: yingxin
       MYSQL_PASSWORD: yingxin123
+      TZ: Asia/Shanghai
+    # lower_case_table_names=1 与云端一致（云端该参数即为 1）。
+    # 注意：该参数只在数据卷首次初始化时生效，改完需删掉旧卷重建：
+    #   docker compose down -v && docker compose up -d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --lower-case-table-names=1
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init-sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot123"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.0.15-alpine
     container_name: yingxin-redis
+    restart: unless-stopped
+    # 与云端保持一致：开启 AOF 持久化。本地不设密码（云端有 requirepass）
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
     volumes:

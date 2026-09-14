@@ -1,0 +1,52 @@
+server:
+  port: 8105
+
+spring:
+  application:
+    name: life-service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（见 docs/部署指南.md）
+    # 云端 Azure MySQL 强制 SSL，需设 MYSQL_SSL_MODE=REQUIRED
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:yingxin}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&sslMode=${MYSQL_SSL_MODE:PREFERRED}
+    username: ${MYSQL_USER:yingxin}
+    password: ${MYSQL_PASSWORD:yingxin123}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 5000
+  data:
+    redis:
+      # 本地 Docker Redis 无密码；云端 Redis 有密码，用 REDIS_PASSWORD 注入
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 0
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.sicnu.yingxin.life.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

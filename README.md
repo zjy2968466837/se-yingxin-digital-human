@@ -6,10 +6,13 @@
 
 | 子系统 | 技术栈 | 目录 |
 |--------|--------|------|
-| 数字人交互端（小程序/H5） | uniapp / 微信小程序 | `frontend/miniprogram` |
-| 管理后台（学校运维） | Vue3 + Vite | `frontend/admin-web` |
-| 后端微服务 | Java 17 + Spring Boot 3 + Spring Cloud | `backend/services` |
-| 基础设施 | MySQL 8 + Redis 7（Docker Compose） | `backend/docker-compose.yml` |
+| 数字人交互端（小程序/H5） | uni-app 3 + Vue3（vite 5.2.8） | `frontend/miniprogram` |
+| 管理后台（学校运维） | Vue3 + Vite 8 + Element Plus | `frontend/admin-web` |
+| 后端微服务 | Java 17 + Spring Boot 3.5 + Spring Cloud 2025（9 个服务，Maven 多模块） | `backend/services` |
+| 基础设施 | 本地 Docker `mysql:8.0.46` + `redis:7.0.15-alpine`；云端 Azure MySQL PaaS + VM Redis 7.0.15 | `backend/docker-compose.yml` |
+
+> 本地与云上共用同一份配置，只靠环境变量区分（代码零改动）。版本基线详见
+> [backend/README.md](backend/README.md)，上云步骤见 [docs/部署指南.md](docs/部署指南.md)。
 
 ## 核心功能
 

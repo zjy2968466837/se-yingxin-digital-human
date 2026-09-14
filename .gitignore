@@ -11,6 +11,10 @@
 *.so
 *.dylib
 
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
 # Unity
 *.csproj
 *.sln
@@ -41,3 +45,6 @@ application-prod.yml
 .env.*
 *.local
 .env.prod
+
+# 前端默认配置不含密码，需要入库（上面的 .env.* 会误伤）
+!frontend/*/.env.development

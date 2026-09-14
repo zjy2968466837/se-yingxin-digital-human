@@ -1,44 +1,169 @@
-# 生产/云上环境：MySQL + Redis
-# 用法：docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
-# 与本地版的区别：不映射公网端口、数据落盘、密码走 .env.prod（不入库）
+# 云上部署：只编排后端微服务。
+#
+# MySQL 与 Redis 不使用容器：
+#   - MySQL 用 Azure Database for MySQL（PaaS），连接信息走 .env.prod
+#   - Redis 用云服务器上已有的 systemd 服务（127.0.0.1:6379）
+# 详见 docs/部署指南.md。
+#
+# 用法（backend/ 目录下）：
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# 注意：本机 3.8G 内存跑满 9 个服务偏紧，演示时可按需只起 gateway + 用到的服务：
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d gateway auth-service
+
+name: yingxin-backend
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: yingxin-mysql
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    image: yingxin/gateway:${IMAGE_TAG:-latest}
+    container_name: yingxin-gateway
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: yingxin
-      MYSQL_USER: yingxin
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    # 不对外映射端口！后端容器走内部网络访问；如需本机调试用 ssh 隧道
-    expose:
-      - "3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ./init-sql:/docker-entrypoint-initdb.d:ro
+    env_file: .env.prod
+    ports:
+      - "8080:8080"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
-  redis:
-    image: redis:7-alpine
-    container_name: yingxin-redis
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    image: yingxin/auth-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-auth-service
     restart: always
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    env_file: .env.prod
     expose:
-      - "6379"
-    volumes:
-      - redis-data:/data
+      - "8100"
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8100/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
-volumes:
-  mysql-data:
-  redis-data:
+  qa-service:
+    build:
+      context: .
+      dockerfile: services/qa-service/Dockerfile
+    image: yingxin/qa-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-qa-service
+    restart: always
+    env_file: .env.prod
+    expose:
+      - "8101"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8101/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  checkin-service:
+    build:
+      context: .
+      dockerfile: services/checkin-service/Dockerfile
+    image: yingxin/checkin-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-checkin-service
+    restart: always
+    env_file: .env.prod
+    expose:
+      - "8102"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8102/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  navigation-service:
+    build:
+      context: .
+      dockerfile: services/navigation-service/Dockerfile
+    image: yingxin/navigation-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-navigation-service
+    restart: always
+    env_file: .env.prod
+    expose:
+      - "8103"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8103/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  aid-service:
+    build:
+      context: .
+      dockerfile: services/aid-service/Dockerfile
+    image: yingxin/aid-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-aid-service
+    restart: always
+    env_file: .env.prod
+    expose:
+      - "8104"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8104/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  life-service:
+    build:
+      context: .
+      dockerfile: services/life-service/Dockerfile
+    image: yingxin/life-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-life-service
+    restart: always
+    env_file: .env.prod
+    expose:
+      - "8105"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8105/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  content-service:
+    build:
+      context: .
+      dockerfile: services/content-service/Dockerfile
+    image: yingxin/content-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-content-service
+    restart: always
+    env_file: .env.prod
+    expose:
+      - "8106"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8106/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: services/admin-service/Dockerfile
+    image: yingxin/admin-service:${IMAGE_TAG:-latest}
+    container_name: yingxin-admin-service
+    restart: always
+    env_file: .env.prod
+    expose:
+      - "8107"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8107/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
