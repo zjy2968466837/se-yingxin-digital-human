@@ -2,20 +2,26 @@
 
 ## 环境准备
 
+从零搭建开发环境（JDK / Node / pnpm / Docker 的版本要求与安装步骤）见
+[环境搭建指南](docs/环境搭建指南.md)，环境一致性约定见 [开发环境版本](docs/开发环境版本.md)。
+
 ```bash
-git clone https://github.com/zjy2968466837/se-course-game.git
-cd se-course-game
+git clone https://github.com/zjy2968466837/se-yingxin-digital-human.git
+cd se-yingxin-digital-human
 git checkout dev
 git checkout -b feat/你的功能名
 ```
+
+> 仓库已用 `.tool-versions` / `.nvmrc` 声明工具链版本：装了 mise 或 nvm 的成员执行
+> `mise install` 或 `nvm use` 即可对齐。**Maven 不用自己装**，统一用仓库自带的 `./mvnw`。
 
 ## 提交规范
 
 采用 Conventional Commits：
 
-- `feat: 新增跳跃判定` —— 新功能
-- `fix: 修复碰撞检测穿透` —— 缺陷修复
-- `docs: 更新需求文档` —— 文档
+- `feat: 新增报到流程进度查询接口` —— 新功能
+- `fix: 修复网关转发裁剪前缀导致 404` —— 缺陷修复
+- `docs: 补充 WSL 环境搭建说明` —— 文档
 - `refactor:` `test:` `chore:` 同理
 
 一次提交只做一件事，信息用祈使句、不超过 72 字符。
