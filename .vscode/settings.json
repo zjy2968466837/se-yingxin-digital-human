@@ -1,0 +1,17 @@
+{
+  "//": "与 .gitattributes / .editorconfig 保持同一套约定，减少跨平台差异",
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  },
+  "editor.detectIndentation": false,
+  "[java]": {
+    "editor.tabSize": 4
+  },
+  "[xml]": {
+    "editor.tabSize": 4
+  }
+}

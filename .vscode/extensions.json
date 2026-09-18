@@ -1,0 +1,11 @@
+{
+  "//": "团队推荐扩展：装上后编辑器才会读 .editorconfig，避免换行符/缩进不一致",
+  "recommendations": [
+    "EditorConfig.EditorConfig",
+    "Vue.volar",
+    "vscjava.vscode-java-pack",
+    "vmware.vscode-spring-boot",
+    "ms-azuretools.vscode-docker",
+    "jebbs.plantuml"
+  ]
+}

@@ -1,0 +1,102 @@
+@startuml 06-功能架构子图-身份核验与报到引导
+!pragma layout smetana
+' =====================================================================
+' 功能架构子图 1 —— 身份核验与报到引导（M1 auth-service + M2 checkin-service）
+' 数据来源：docs/功能清单.md v1.0 §2
+' 渲染方式（PNG + SVG 图片）：
+'   java -jar plantuml.jar -charset UTF-8 -tpng -tsvg 06-功能架构子图-身份核验与报到引导.puml
+' =====================================================================
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam ArrowColor #526D82
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #EEF4FB
+  BorderColor #526D82
+  FontSize 11
+}
+skinparam package {
+  BackgroundColor #FAFCFE
+  BorderColor #94A3B8
+  FontColor #1E293B
+  FontStyle bold
+  FontSize 12
+}
+skinparam database {
+  BackgroundColor #E8F3EC
+  BorderColor #526D82
+}
+skinparam NoteBackgroundColor #FFF9E6
+skinparam NoteBorderColor #D9B34A
+skinparam NoteFontSize 11
+
+title 功能架构子图 1 · 身份核验与报到引导（M1 + M2）
+
+rectangle "接入端\n小程序登录页 / 报到页" as ENTRY
+
+package "auth-service : 8100　M1 身份核验与个性化迎新" {
+  package "账号与登录" {
+    rectangle "学号 / 身份证登录\nF1.1" as F11
+    rectangle "微信一键登录\nF1.2" as F12
+    rectangle "人脸轻核验\nF1.3" as F13
+  }
+  package "身份解析与个性化" {
+    rectangle "身份信息解析\nF1.4" as F14
+    rectangle "个性化欢迎语\nF1.5" as F15
+    rectangle "专属报到清单\nF1.6" as F16
+    rectangle "待办事项推送\nF1.7" as F17
+  }
+  package "会话与认证对接" {
+    rectangle "会话与令牌 JWT\nF1.8" as F18
+    rectangle "统一身份认证对接\nCAS / OAuth 适配层\nF1.9" as F19
+  }
+}
+
+package "checkin-service : 8102　M2 报到全流程导引" {
+  package "流程配置与引导" {
+    rectangle "报到步骤模板配置\nF2.1" as F21
+    rectangle "步骤化引导\nF2.2" as F22
+    rectangle "办理信息展示\nF2.3" as F23
+  }
+  package "进度与凭证" {
+    rectangle "报到状态查询\nF2.4" as F24
+    rectangle "步骤完成打卡\nF2.5" as F25
+    rectangle "报到凭证二维码\nF2.10" as F210
+  }
+  package "材料与异常" {
+    rectangle "材料清单与提醒\nF2.6" as F26
+    rectangle "缴费状态查询\nF2.7" as F27
+    rectangle "绿色通道入口\nF2.8" as F28
+    rectangle "异常处理指引\nF2.9" as F29
+  }
+}
+
+rectangle "aid-service\n资助与绿色通道\n（详见子图 3）" as AID
+
+database "MySQL · yingxin\n按服务分表" as DB
+database "Redis\nJWT 会话" as RD
+
+ENTRY --> F11
+ENTRY --> F12
+ENTRY --> F21
+
+F12 --> F14 : 登录后解析身份
+F18 --> RD : 会话存储
+F14 --> F16 : 生成清单
+F16 --> DB
+F25 --> F24 : 写回进度
+F24 --> DB
+F210 --> DB
+F28 --> AID : 跨服务跳转
+F21 --> DB : 步骤模板
+
+note bottom of DB
+  **实现状态：骨架阶段**
+  各服务当前仅有 XxxApplication + PingController，
+  无 Service / Mapper / Entity 分层，
+  无统一返回体与全局异常处理，
+  上表功能项均待开发。
+end note
+
+@enduml

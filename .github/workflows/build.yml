@@ -42,9 +42,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # 不写死 version：改为读取 package.json 的 packageManager 字段，
+      # 使 CI 与成员本地（corepack）共用同一处版本声明，避免两处漂移
       - uses: pnpm/action-setup@v6
         with:
-          version: 12.4.1
+          package_json_file: frontend/admin-web/package.json
 
       - uses: actions/setup-node@v7
         with:
@@ -68,9 +70,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # 同上：版本来源为 frontend/miniprogram/package.json 的 packageManager
       - uses: pnpm/action-setup@v6
         with:
-          version: 12.4.1
+          package_json_file: frontend/miniprogram/package.json
 
       - uses: actions/setup-node@v7
         with:

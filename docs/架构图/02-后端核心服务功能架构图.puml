@@ -1,0 +1,98 @@
+@startuml 02-后端核心服务功能架构图
+!pragma layout smetana
+' =====================================================================
+' 大学生迎新导引服务数字人系统 —— 后端核心服务功能架构图
+' 数据来源：docs/功能清单.md（v1.0）、backend/services/*/application.yml 描述、
+'          gateway/src/main/resources/application.yml 路由表
+' 渲染方式：VS Code「PlantUML」扩展 Alt+D 预览，右键导出 PNG/SVG。
+'          已声明 !pragma layout smetana（内置纯 Java 布局引擎），无需安装 Graphviz；
+'          若已装 Graphviz(dot) 且想要更规整的布局，删掉这行 pragma 即可切回 dot。
+' 说明：功能编号 F（x.y）与 docs/功能清单.md 一一对应；状态以该文档为准
+' =====================================================================
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 18
+skinparam ranksep 30
+skinparam ArrowColor #526D82
+skinparam ArrowFontSize 11
+skinparam rectangleBorderColor #526D82
+skinparam rectangleBackgroundColor #EEF4FB
+skinparam rectangleFontSize 11
+skinparam DatabaseBorderColor #526D82
+skinparam DatabaseBackgroundColor #E8F3EC
+skinparam PackageBorderColor #94A3B8
+skinparam PackageBackgroundColor #FAFCFE
+skinparam PackageFontColor #1E293B
+skinparam PackageFontStyle bold
+skinparam NoteBackgroundColor #FFF9E6
+skinparam NoteBorderColor #D9B34A
+skinparam NoteFontSize 11
+
+title 大学生迎新导引服务数字人系统 · 后端核心服务与功能架构\n<size:12>功能编号与 docs/功能清单.md 对应；除基础设施外业务功能均为待开发</size>
+
+package "接入端 · 多端适配（M10）" as P0 {
+  rectangle "微信小程序 / H5\n· 登录与身份核验\n· 数字人对话（语音/文字）\n· 报到 / 导航 / 资助 / 生活" as U1
+  rectangle "管理后台 admin-web\n· 登录 + 路由守卫\n· 问答库 · 话术 · 公告\n· 数据看板" as U2
+  rectangle "PC 现场大屏 / 迎新官网嵌入\n· 数字人自助咨询" as U3
+}
+
+package "网关层 · gateway : 8080（平台与基础设施 M11）" as P1 {
+  rectangle "API 网关路由 F11.1（已实现）\n/api/〈服务〉/** 不裁剪前缀" as G1
+  rectangle "连通性自检 F11.2（已实现）\n各服务 /ping + Swagger" as G2
+  rectangle "环境变量配置 F11.4（已实现）\n本地默认值 / 云上覆盖" as G3
+  rectangle "统一鉴权 · 限流防刷 F11.6（规划中）\n网关 Filter" as G4
+  rectangle "监控与日志 F11.7（规划中）\nActuator / 集中日志" as G5
+}
+
+package "业务服务层 · 核心服务（端口 8100–8107）" as P2 {
+
+  rectangle "**auth-service : 8100**　身份核验与个性化迎新（M1）\n--\n· 学号/身份证登录 F1.1\n· 微信一键登录 F1.2\n· 人脸轻核验 F1.3\n· 身份信息解析 F1.4\n· 个性化欢迎语 F1.5\n· 专属报到清单 F1.6\n· 待办事项推送 F1.7\n· 会话与令牌 JWT F1.8\n· 统一身份认证对接 F1.9" as S1
+
+  rectangle "**qa-service : 8101**　智能问答（M3，数字人主交互）\n--\n· 问答库管理 F3.1\n· 高频问检索 F3.2\n· 意图理解 F3.3\n· 口语化提问 F3.4\n· 多轮对话 F3.5\n· LLM 兜底 F3.6\n· 富媒体答案 F3.7\n· 语音 ASR / TTS F3.8–F3.9\n· 热门问题推荐 F3.10\n· 未解答转人工 F3.11\n· 热点缓存 F3.12\n· 对话记录存储 F3.13\n· WebSocket 实时会话 F3.14" as S2
+
+  rectangle "**checkin-service : 8102**　报到全流程导引（M2）\n--\n· 步骤模板配置 F2.1\n· 步骤化引导 F2.2\n· 办理信息展示 F2.3\n· 报到状态查询 F2.4\n· 步骤完成打卡 F2.5\n· 材料清单与提醒 F2.6\n· 缴费状态查询 F2.7\n· 绿色通道入口 F2.8\n· 异常处理指引 F2.9\n· 报到凭证二维码 F2.10" as S3
+
+  rectangle "**navigation-service : 8103**　校园 AR/3D 导航（M4）\n--\n· 地图与 POI 管理 F4.1\n· POI 检索 F4.2\n· 室外路径规划 F4.3\n· 室内导航 F4.4\n· 步行时间估算 F4.5\n· 校内通勤 F4.6\n· 数字人带路 F4.7\n· 地标讲解 F4.8\n· AR 实景导航 F4.9\n· 常用地点快捷导航 F4.10" as S4
+
+  rectangle "**aid-service : 8104**　资助与绿色通道（M5）\n--\n· 资助政策库 F5.1\n· 政策条件匹配 F5.2\n· 材料清单 F5.3\n· 办理入口直达 F5.4\n· 绿色通道申请 F5.5\n· 缓交学费指引 F5.6\n· 申请进度查询 F5.7\n· 申请审核 F5.8" as S5
+
+  rectangle "**life-service : 8105**　生活服务聚合（M6）\n--\n· 宿舍报修 F6.1\n· 水电缴费 F6.2\n· 洗衣机 / 热水 F6.3\n· 门禁 F6.4\n· 食堂服务 F6.5\n· 校园网开通 F6.6\n· 营业厅 / 快递点 F6.7\n· 就医与医保 F6.8\n· 心理中心 F6.9\n· 生活服务 FAQ F6.10" as S6
+
+  rectangle "**content-service : 8106**　安全与社团内容（M7 / M8）\n--\n· 安全知识内容库 F7.1\n· 案例推送 F7.2\n· 安全答题 F7.3\n· 数字人讲解 F7.4\n· 紧急电话一键拨号 F7.5\n· 学习记录 F7.6\n· 社团介绍 F8.1\n· 招新信息 F8.2\n· 入学教育 / 校规 F8.3\n· 军训安排 F8.4\n· 常用表格下载 F8.5" as S7
+
+  rectangle "**admin-service : 8107**　管理后台支撑（M9）\n--\n· 管理员登录 F9.1（骨架）\n· 分权限管理 RBAC F9.2\n· 问答库管理 F9.3（骨架）\n· 数字人话术配置 F9.4\n· 公告与迎新信息发布 F9.5\n· 数据统计看板 F9.6（骨架）\n· 报到进度统计 F9.7\n· 内容审核发布 F9.8\n· 操作日志 F9.9\n· 系统配置 F9.10" as S8
+}
+
+package "数据与缓存层" as P3 {
+  database "MySQL 8.0.46\n库 yingxin · 按服务分表\ninit-sql/01-init.sql（仅建库，无版本管理）" as DB
+  database "Redis 7.0.15\n热点问答缓存（F3.12）· JWT 令牌（F1.8）" as RD
+}
+
+U1 --> P1
+U2 --> P1
+U3 --> P1
+
+P1 --> S1
+P1 --> S2
+P1 --> S3
+P1 --> S4
+P1 --> S5
+P1 --> S6
+P1 --> S7
+P1 --> S8
+
+P2 --> DB
+P2 --> RD
+
+note bottom of P2
+  **公共能力层（规划中，当前仓库不存在 common 模块）**
+  · 统一响应体 { code, message, data }，错误码分段 1xxx 认证 / 2xxx 业务 / 9xxx 系统
+  · 全局异常处理 · 参数校验 · 日志规范
+  · JWT 签发与校验、网关鉴权 Filter、Redis 令牌存储
+  · 接口风格：RESTful，前缀 /api/〈服务简称〉/**；实时交互规划走 WebSocket
+  · 落地原则：先定统一方案再逐服务补齐，不在每个服务各写一套
+end note
+
+@enduml

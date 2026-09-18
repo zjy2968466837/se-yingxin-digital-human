@@ -4,6 +4,8 @@
 [Ll]ibrary/
 [Oo]bj/
 [Tt]emp/
+# PlantUML 扩展的导出目录（构建产物，源图与图片统一放 docs/架构图/）
+/out/
 *.apk
 *.aab
 *.exe

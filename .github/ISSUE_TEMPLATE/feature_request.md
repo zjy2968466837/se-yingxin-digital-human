@@ -1,6 +1,6 @@
 ---
 name: 功能/新特性请求
-about: 提出新功能或玩法建议
+about: 提出迎新数字人系统的新功能建议
 title: "[FEAT] "
 labels: enhancement
 ---

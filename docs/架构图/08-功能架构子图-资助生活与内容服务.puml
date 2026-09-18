@@ -1,0 +1,119 @@
+@startuml 08-功能架构子图-资助生活与内容服务
+!pragma layout smetana
+' =====================================================================
+' 功能架构子图 3 —— 资助 · 生活 · 内容服务
+' （M5 aid-service + M6 life-service + M7/M8 content-service）
+' 数据来源：docs/功能清单.md v1.0 §2
+' 渲染方式（PNG + SVG 图片）：
+'   java -jar plantuml.jar -charset UTF-8 -tpng 08-功能架构子图-资助生活与内容服务.puml
+'   java -jar plantuml.jar -charset UTF-8 -tsvg 08-功能架构子图-资助生活与内容服务.puml
+' =====================================================================
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam ArrowColor #526D82
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #EEF4FB
+  BorderColor #526D82
+  FontSize 11
+}
+skinparam package {
+  BackgroundColor #FAFCFE
+  BorderColor #94A3B8
+  FontColor #1E293B
+  FontStyle bold
+  FontSize 12
+}
+skinparam database {
+  BackgroundColor #E8F3EC
+  BorderColor #526D82
+}
+skinparam NoteBackgroundColor #FFF9E6
+skinparam NoteBorderColor #D9B34A
+skinparam NoteFontSize 11
+
+title 功能架构子图 3 · 资助 · 生活 · 内容服务（M5 + M6 + M7 + M8）
+
+rectangle "小程序\n资助页 / 生活页 / 安全页 / 社团页" as ENTRY
+
+package "aid-service : 8104　M5 资助与绿色通道" {
+  package "政策查询" {
+    rectangle "资助政策库\n国家助学金 / 助学贷款 / 勤工助学 / 困难补助\nF5.1" as F51
+    rectangle "政策详情与条件匹配\nF5.2" as F52
+    rectangle "材料清单\nF5.3" as F53
+    rectangle "办理入口一键直达\nF5.4" as F54
+  }
+  package "申请与审核" {
+    rectangle "绿色通道申请\nF5.5" as F55
+    rectangle "缓交学费申请指引\nF5.6" as F56
+    rectangle "申请进度查询\nF5.7" as F57
+    rectangle "申请审核（后台）\nF5.8" as F58
+  }
+}
+
+package "life-service : 8105　M6 生活服务聚合" {
+  package "报修与缴费" {
+    rectangle "宿舍报修\n提交 / 传图 / 进度\nF6.1" as F61
+    rectangle "水电缴费\n余额与缴费入口\nF6.2" as F62
+  }
+  package "设施与网络" {
+    rectangle "洗衣机 / 热水\nF6.3" as F63
+    rectangle "门禁开通指引\nF6.4" as F64
+    rectangle "校园网开通\nF6.6" as F66
+    rectangle "营业厅 / 快递点\nF6.7" as F67
+  }
+  package "就医与生活" {
+    rectangle "食堂服务\nF6.5" as F65
+    rectangle "就医与医保报销\nF6.8" as F68
+    rectangle "心理中心\nF6.9" as F69
+    rectangle "生活服务 FAQ\nF6.10" as F610
+  }
+}
+
+package "content-service : 8106　M7 安全与防诈骗 + M8 社团与入学适应" {
+  package "安全教育 M7" {
+    rectangle "安全知识内容库\nF7.1" as F71
+    rectangle "案例推送\nF7.2" as F72
+    rectangle "安全答题\nF7.3" as F73
+    rectangle "数字人讲解\nF7.4" as F74
+    rectangle "紧急电话一键拨号\nF7.5" as F75
+    rectangle "学习记录\nF7.6" as F76
+  }
+  package "入学适应 M8" {
+    rectangle "社团介绍\nF8.1" as F81
+    rectangle "招新信息\nF8.2" as F82
+    rectangle "入学教育与校规校纪\nF8.3" as F83
+    rectangle "军训安排\nF8.4" as F84
+    rectangle "常用表格下载\nF8.5" as F85
+  }
+}
+
+database "MySQL · yingxin\n资助申请 / 报修单 / 内容库" as DB
+rectangle "外部系统\n财务（缴费）· 后勤（报修）\n医保 · 心理咨询预约" as EXT
+
+ENTRY --> F51
+ENTRY --> F61
+ENTRY --> F71
+ENTRY --> F81
+
+F52 --> F55 : 条件匹配后申请
+F55 --> DB
+F57 --> DB
+F58 --> DB : 审核状态回写
+F55 --> F75 : 紧急情况接入
+F61 --> DB : 报修单
+F62 --> EXT : 对接财务 / 模拟数据
+F61 --> EXT : 对接后勤系统
+F68 --> EXT
+F71 --> DB
+F85 --> DB
+
+note bottom of DB
+  **实现状态：骨架阶段**
+  三个服务当前均只有 XxxApplication + PingController，
+  无 Service / Mapper / Entity 分层，无统一返回体与全局异常处理，
+  上表功能项均待开发。外部系统在课程演示阶段以模拟数据替代。
+end note
+
+@enduml
