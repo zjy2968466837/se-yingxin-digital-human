@@ -4,7 +4,7 @@
 [Ll]ibrary/
 [Oo]bj/
 [Tt]emp/
-# PlantUML 扩展的导出目录（构建产物，源图与图片统一放 docs/架构图/）
+# PlantUML 扩展的导出目录（构建产物，不入库；成品图统一放 docs/架构图/，只提交 svg）
 /out/
 *.apk
 *.aab
