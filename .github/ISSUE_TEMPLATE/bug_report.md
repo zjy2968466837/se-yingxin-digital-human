@@ -1,6 +1,6 @@
 ---
 name: 缺陷报告
-about: 报告游戏中的问题
+about: 报告迎新数字人系统中的问题
 title: "[BUG] "
 labels: bug
 ---
