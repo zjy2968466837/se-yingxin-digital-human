@@ -1,0 +1,98 @@
+@startuml 09-功能架构子图-管理后台与平台能力
+!pragma layout smetana
+' =====================================================================
+' 功能架构子图 4 —— 管理后台与平台能力（M9 admin-service + M11 gateway / 基建）
+' 数据来源：docs/功能清单.md v1.0 §2
+' 渲染方式（PNG + SVG 图片）：
+'   java -jar plantuml.jar -charset UTF-8 -tpng 09-功能架构子图-管理后台与平台能力.puml
+'   java -jar plantuml.jar -charset UTF-8 -tsvg 09-功能架构子图-管理后台与平台能力.puml
+' =====================================================================
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam ArrowColor #526D82
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #EEF4FB
+  BorderColor #526D82
+  FontSize 11
+}
+skinparam package {
+  BackgroundColor #FAFCFE
+  BorderColor #94A3B8
+  FontColor #1E293B
+  FontStyle bold
+  FontSize 12
+}
+skinparam database {
+  BackgroundColor #E8F3EC
+  BorderColor #526D82
+}
+skinparam NoteBackgroundColor #FFF9E6
+skinparam NoteBorderColor #D9B34A
+skinparam NoteFontSize 11
+
+title 功能架构子图 4 · 管理后台与平台能力（M9 + M11）
+
+rectangle "管理后台 admin-web\nVue 3 + Vite 8 + Element Plus" as ADMINWEB
+rectangle "业务服务\n8 个 Spring MVC 服务" as BIZ
+
+package "admin-service : 8107　M9 管理后台支撑" {
+  package "账号与权限" {
+    rectangle "管理员登录\nF9.1（骨架）" as F91
+    rectangle "分权限管理 RBAC\n学工 / 后勤 / 保卫 / 学院数据权限\nF9.2" as F92
+  }
+  package "内容运营" {
+    rectangle "问答库管理\n录入 / 批量导入 / 审核发布\nF9.3（骨架）" as F93
+    rectangle "数字人话术配置\n欢迎语 / 引导语 / 兜底话术\nF9.4" as F94
+    rectangle "公告与迎新信息发布\nF9.5" as F95
+    rectangle "内容审核发布\nF9.8" as F98
+  }
+  package "数据与系统" {
+    rectangle "数据统计看板\n咨询热点 / 导航热点 / 未解决率\nF9.6（骨架）" as F96
+    rectangle "报到进度统计\nF9.7" as F97
+    rectangle "操作日志\nF9.9" as F99
+    rectangle "系统配置\n报到批次 / 时间窗口 / 开关项\nF9.10" as F910
+  }
+}
+
+package "gateway : 8080　M11 平台与基础设施" {
+  rectangle "API 网关路由\n/api/〈服务〉/** 不裁剪前缀\nF11.1（已实现）" as G1
+  rectangle "服务连通性自检\n各服务 /ping + Swagger\nF11.2（已实现）" as G2
+  rectangle "MySQL + Redis 基础设施\nF11.3（已实现）" as G3
+  rectangle "环境变量配置\n本地默认值 / 云上覆盖\nF11.4（已实现）" as G4
+  rectangle "云上部署编排\nF11.5（已实现）" as G5
+  rectangle "统一鉴权与防刷\nF11.6（规划中）" as G6
+  rectangle "监控与日志\nF11.7（规划中）" as G7
+}
+
+database "MySQL 8.0.46\nyingxin 库 · 按服务分表" as DB
+database "Redis 7.0.15\n热点缓存 · JWT 会话" as RD
+rectangle "云上环境\nAzure MySQL PaaS（强制 SSL）\nVM Redis（requirepass）" as CLOUD
+
+ADMINWEB --> F91 : 登录
+ADMINWEB --> F93 : 问答库维护
+ADMINWEB --> F96 : 查看看板
+
+F93 --> DB : 问答库发布
+F94 --> DB : 话术模板
+F97 --> DB : 聚合报到进度
+F99 --> DB : 操作留痕
+F92 --> F93 : 权限校验
+
+BIZ --> G1
+G1 --> G6 : 规划中
+
+DB --> CLOUD
+RD --> CLOUD
+
+note bottom of G7
+  **落地原则（AGENTS.md）**
+  · 后端当前无 common 公共模块，补齐基础设施时须先定统一方案
+    再逐服务落地，不要在每个服务里各写一套
+  · application.yml 一律用 ${环境变量:本地默认值} 占位，
+    本地与云端共用同一份文件、代码零改动
+  · 本地与云端环境相反：云端 MySQL 强制 SSL、Redis 带密码
+end note
+
+@enduml

@@ -1,0 +1,87 @@
+@startuml 05-时序图-智能问答
+' =====================================================================
+' 大学生迎新导引服务数字人系统 —— 时序图：智能问答（数字人主交互）
+' 对应功能：F3.8 ASR、F3.12 热点缓存、F3.2 检索、F3.3 意图理解、
+'          F3.6 LLM 兜底、F3.9 TTS、F3.11 未解答转人工
+' 渲染方式（PNG + SVG 图片）：
+'   java -jar plantuml.jar -charset UTF-8 -tpng -tsvg 05-时序图-智能问答.puml
+' =====================================================================
+autonumber
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #526D82
+  ArrowFontSize 11
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #526D82
+  ParticipantBackgroundColor #EEF4FB
+  ParticipantFontSize 12
+}
+skinparam database {
+  BackgroundColor #E8F3EC
+  BorderColor #526D82
+}
+skinparam NoteBackgroundColor #FFF9E6
+skinparam NoteBorderColor #D9B34A
+skinparam NoteFontSize 11
+
+title 时序图 · 智能问答（缓存 → 问答库 → LLM 三段式）\n<size:12>F3.2 / F3.3 / F3.6 / F3.9 / F3.11 / F3.12 —— 问答库优先命中，LLM 仅兜底以控成本</size>
+
+participant "数字人交互端\n小程序 / 大屏" as App
+participant "API 网关\ngateway : 8080" as GW
+participant "qa-service\n: 8101" as QA
+database "Redis\n热点问答缓存" as RD
+database "MySQL\n问答库 / 会话记录" as DB
+participant "ASR 语音识别" as ASR
+participant "LLM 大模型" as LLM
+participant "TTS 语音合成" as TTS
+
+== 一、提问 ==
+alt 语音提问
+  App -> ASR : 上传音频流
+  ASR --> App : 识别文本
+  note right of ASR
+    F3.8 供应商待定，
+    先做接口抽象 + 本地模拟
+  end note
+end
+
+App -> GW : POST /api/qa/ask\n{ sessionId, question }
+GW -> QA : 路径路由转发
+
+== 二、三段式应答 ==
+QA -> RD : 查询热点问答缓存（F3.12）
+alt 缓存命中
+  RD --> QA : 命中答案
+else 缓存未命中
+  QA -> DB : 关键词 + 全文检索问答库（F3.2）
+  DB --> QA : 候选条目与置信度
+  alt 问答库命中
+    QA -> RD : 回写热点缓存
+  else 问答库未命中
+    QA -> QA : 意图理解与槽位补全（F3.3 / F3.5）
+    QA -> LLM : 携带问答库知识增强的提示词（F3.6）
+    LLM --> QA : 生成答案
+    alt 置信度仍低于阈值
+      QA -> DB : 落库未解答记录（F3.11）
+      QA -> App : 提示转人工 / 辅导员
+    end
+  end
+end
+
+== 三、输出与播报 ==
+QA -> DB : 持久化会话与消息（F3.13，加密存储）
+QA -> TTS : 答案文本合成语音（F3.9）
+TTS --> QA : 音频流
+QA --> GW : 富媒体答案 + 音频地址（F3.7）
+GW --> App : 渲染答案并驱动数字人口型（F10.3）
+
+== 四、实时通道（规划中） ==
+note over App, GW
+  **F3.14 WebSocket 实时会话（规划中）**
+  当前后端尚未引入 WebSocket 依赖，
+  实时交互暂以 HTTP 轮询替代
+end note
+
+@enduml

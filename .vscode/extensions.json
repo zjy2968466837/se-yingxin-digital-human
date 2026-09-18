@@ -5,6 +5,7 @@
     "Vue.volar",
     "vscjava.vscode-java-pack",
     "vmware.vscode-spring-boot",
-    "ms-azuretools.vscode-docker"
+    "ms-azuretools.vscode-docker",
+    "jebbs.plantuml"
   ]
 }
