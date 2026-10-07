@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.sicnu.yingxin</groupId>
+    <artifactId>yingxin-backend</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>common-core</artifactId>
+  <name>common-core</name>
+  <description>公共基础模块：统一响应体、错误码、业务异常、通用工具</description>
+
+  <!--
+    依赖约束（见 docs/开发规范.md §1.3）：
+    本模块被 gateway（WebFlux）与 8 个业务服务（Servlet MVC）共同依赖，
+    因此只允许 JDK / Jackson / Lombok，禁止引入 spring-web、spring-webmvc、servlet-api。
+    一旦引入 web 相关依赖，网关会因 servlet 栈缺失或冲突而启动失败。
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--
+        本模块是被依赖的库，不产出可执行 jar。
+        父 pom 为业务服务配置了 spring-boot-maven-plugin，此处必须显式跳过 repackage，
+        否则构建会因「找不到 main class」而失败。
+      -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

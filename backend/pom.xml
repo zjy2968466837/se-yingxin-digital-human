@@ -19,6 +19,9 @@
   <description>大学生迎新导引服务数字人系统 - 后端微服务</description>
 
   <modules>
+    <!-- 公共模块必须先于业务服务构建：common-core 被全部服务依赖，common-web 被 8 个业务服务依赖 -->
+    <module>common-core</module>
+    <module>common-web</module>
     <module>services/gateway</module>
     <module>services/auth-service</module>
     <module>services/qa-service</module>
@@ -45,6 +48,18 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- 公共模块版本统一在此声明，各服务引用时无需写 version -->
+      <dependency>
+        <groupId>com.sicnu.yingxin</groupId>
+        <artifactId>common-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sicnu.yingxin</groupId>
+        <artifactId>common-web</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
