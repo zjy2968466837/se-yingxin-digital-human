@@ -16,6 +16,11 @@
   <description>API 网关：统一入口、路由转发、跨域</description>
 
   <dependencies>
+    <!-- 网关只引 common-core：用于 401/403 的统一响应体（WebFlux 不能引 common-web） -->
+    <dependency>
+      <groupId>com.sicnu.yingxin</groupId>
+      <artifactId>common-core</artifactId>
+    </dependency>
     <!-- 注意：网关基于 WebFlux，不能引入 spring-boot-starter-web，否则启动冲突 -->
     <dependency>
       <groupId>org.springframework.cloud</groupId>

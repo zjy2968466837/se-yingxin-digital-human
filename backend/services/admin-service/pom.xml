@@ -16,6 +16,11 @@
   <description>管理后台支撑：统计、权限、运维</description>
 
   <dependencies>
+    <!-- 统一形态由公共模块提供：统一响应体、全局异常、traceId、用户上下文、MP/Redis/Jackson 配置 -->
+    <dependency>
+      <groupId>com.sicnu.yingxin</groupId>
+      <artifactId>common-web</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>

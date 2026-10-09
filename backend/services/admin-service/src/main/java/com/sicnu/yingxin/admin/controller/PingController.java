@@ -8,9 +8,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import com.sicnu.yingxin.common.core.result.Result;
 
 /**
- * 连通性自检接口，用于验证服务本身与网关路由是否正常。
+ * 连通性自检接口：验证服务本身与网关路由，并确认统一响应体形态（code/message/data）。
  */
 @RestController
 @RequestMapping("/api/admin")
@@ -20,11 +21,11 @@ public class PingController {
     private String serviceName;
 
     @GetMapping("/ping")
-    public Map<String, Object> ping() {
+    public Result<Map<String, Object>> ping() {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("service", serviceName);
         body.put("status", "UP");
         body.put("time", OffsetDateTime.now().toString());
-        return body;
+        return Result.ok(body);
     }
 }

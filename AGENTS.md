@@ -6,8 +6,9 @@
 
 仓库仍处于**骨架阶段**。以下基础设施**尚不存在**，不要假设可以直接调用：
 
-- 后端：每个服务只有 `XxxApplication` 启动类 + 一个 `PingController` 自检接口。
-  没有统一返回体、全局异常处理、Service/Mapper/Entity 分层、参数校验、日志规范，也**没有任何测试类**。
+- 后端：每个服务只有 `XxxApplication` 启动类 + 一个 `PingController` 自检接口（已返回统一响应体）。
+  横向能力由公共模块提供：统一响应体 / 错误码 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson 配置（`common-web` 自动装配，已有单元测试）。
+  **仍缺**：Service / Mapper / Entity 分层与业务代码、网关鉴权（S3）、业务单元测试。
 - 鉴权：`auth-service` 目前没有任何认证逻辑——没有 JWT 依赖、没有签发/校验、没有拦截器或 Filter，
   网关也没有鉴权过滤器。前端发的 `Bearer` token 暂时无人验证。
 - 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_init.sql`（8 个文件，裁剪后 **24 张表**），本地库已按脚本建表。
@@ -49,8 +50,9 @@ cd frontend/miniprogram && pnpm install && pnpm dev:h5          # 一期：学�
 
 ## 架构边界
 
-- 后端：`backend/pom.xml` 只做模块聚合，**尚无 common 公共模块**（设计已定 `common-core` + `common-web`，见
-  [docs/开发规范.md](docs/开发规范.md) §1.3 与需求分析文档 §2.6，**载体待建**）；包根 `com.sicnu.yingxin.<服务名>`。
+- 后端：**11 个模块** = 9 个服务 + `common-core` + `common-web`（公共模块已落地，见 [docs/开发规范.md](docs/开发规范.md) §1.3）；
+  包根 `com.sicnu.yingxin.<服务名>`，公共模块为 `com.sicnu.yingxin.common.core` / `com.sicnu.yingxin.common.web`。
+  **新服务必须引 `common-web`**（自动装配统一响应体 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson 配置）；网关只引 `common-core`。
   端口：gateway `8080`、auth `8100`、qa `8101`、checkin `8102`、navigation `8103`、aid `8104`、life `8105`、content `8106`、admin `8107`。
 - 网关路由写在 `backend/services/gateway/src/main/resources/application.yml`，前缀 `/api/<服务>/**`，
   **转发不裁剪前缀**——直连 `8101` 与走网关 `8080` 的路径完全一致。CORS 也在这份 yml 里全局配置。

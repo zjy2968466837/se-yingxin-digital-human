@@ -19,6 +19,9 @@
   <description>大学生迎新导引服务数字人系统 - 后端微服务</description>
 
   <modules>
+    <!-- 公共模块必须排在服务之前：gateway → common-core；services/* → common-web → common-core -->
+    <module>common-core</module>
+    <module>common-web</module>
     <module>services/gateway</module>
     <module>services/auth-service</module>
     <module>services/qa-service</module>
@@ -45,6 +48,17 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- 公共模块版本统一在这里声明，服务 pom 引用时不写版本号 -->
+      <dependency>
+        <groupId>com.sicnu.yingxin</groupId>
+        <artifactId>common-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sicnu.yingxin</groupId>
+        <artifactId>common-web</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
@@ -55,6 +69,12 @@
       <dependency>
         <groupId>com.baomidou</groupId>
         <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        <version>${mybatis-plus.version}</version>
+      </dependency>
+      <!-- 3.5.9 起分页 / 防全表更新删除等 SQL 解析型拦截器拆到独立模块，starter 不再传递 -->
+      <dependency>
+        <groupId>com.baomidou</groupId>
+        <artifactId>mybatis-plus-jsqlparser</artifactId>
         <version>${mybatis-plus.version}</version>
       </dependency>
       <dependency>
