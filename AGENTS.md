@@ -10,7 +10,8 @@
   没有统一返回体、全局异常处理、Service/Mapper/Entity 分层、参数校验、日志规范，也**没有任何测试类**。
 - 鉴权：`auth-service` 目前没有任何认证逻辑——没有 JWT 依赖、没有签发/校验、没有拦截器或 Filter，
   网关也没有鉴权过滤器。前端发的 `Bearer` token 暂时无人验证。
-- 数据库：**没有表结构版本管理**（无 Flyway/Liquibase），`backend/init-sql/01-init.sql` 只执行 `CREATE DATABASE`。
+- 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_init.sql`（8 个文件，裁剪后 **24 张表**），本地库已按脚本建表。
+  Flyway 依赖尚未接入（父 pom 的 `db` profile 待补），当前手工执行脚本；`backend/init-sql/01-init.sql` 仍只执行 `CREATE DATABASE`。
 - 前端：`admin-web` 只有登录页与连通性自检页（`QaView.vue` 是空占位），没有列表/表单等 CRUD 范例可抄；
   `miniprogram` 只注册了首页与「我的」两个页面。
 
