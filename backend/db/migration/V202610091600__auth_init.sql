@@ -25,7 +25,7 @@ CREATE TABLE `auth_user` (
   UNIQUE KEY `uk_openid` (`openid`),
   UNIQUE KEY `uk_student_no` (`student_no`),
   KEY `idx_phone` (`phone`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='auth_user';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户账号';
 
 -- auth_identity
 CREATE TABLE `auth_identity` (
@@ -48,7 +48,7 @@ CREATE TABLE `auth_identity` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_id` (`user_id`),
   KEY `idx_college_batch` (`college`, `batch_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='auth_identity';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='身份档案';
 
 -- auth_push_record
 CREATE TABLE `auth_push_record` (
@@ -70,5 +70,5 @@ CREATE TABLE `auth_push_record` (
   PRIMARY KEY (`id`),
   KEY `idx_user_status` (`user_id`, `status`),
   KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='auth_push_record';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='待办推送记录';
 

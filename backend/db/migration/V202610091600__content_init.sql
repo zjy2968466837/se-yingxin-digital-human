@@ -27,5 +27,5 @@ CREATE TABLE `content_article` (
   PRIMARY KEY (`id`),
   KEY `idx_module_status` (`module`, `status`),
   KEY `idx_publish_time` (`publish_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='content_article';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='内容条目';
 

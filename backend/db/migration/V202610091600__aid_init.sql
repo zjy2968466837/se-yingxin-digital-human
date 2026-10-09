@@ -24,7 +24,7 @@ CREATE TABLE `aid_policy` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   KEY `idx_category_status` (`category`, `status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='aid_policy';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='资助政策';
 
 -- aid_application
 CREATE TABLE `aid_application` (
@@ -50,5 +50,5 @@ CREATE TABLE `aid_application` (
   UNIQUE KEY `uk_user_policy_batch` (`user_id`, `policy_id`, `batch_id`, `deleted`),
   KEY `idx_status_time` (`status`, `create_time`),
   KEY `idx_policy_status` (`policy_id`, `status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='aid_application';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='资助申请';
 

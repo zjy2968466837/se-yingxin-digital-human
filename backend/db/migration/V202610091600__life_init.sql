@@ -26,7 +26,7 @@ CREATE TABLE `life_repair_order` (
   UNIQUE KEY `uk_order_no` (`order_no`),
   KEY `idx_user_time` (`user_id`, `create_time`),
   KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='life_repair_order';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报修单';
 
 -- life_service_info
 CREATE TABLE `life_service_info` (
@@ -47,5 +47,5 @@ CREATE TABLE `life_service_info` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   KEY `idx_category_status` (`category`, `status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='life_service_info';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='生活服务信息';
 

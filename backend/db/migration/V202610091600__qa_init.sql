@@ -23,7 +23,7 @@ CREATE TABLE `qa_question` (
   PRIMARY KEY (`id`),
   KEY `idx_category_status` (`category`, `status`),
   FULLTEXT KEY `idx_question` (`question`, `synonyms`) WITH PARSER ngram
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='qa_question';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='问答条目';
 
 -- qa_session
 CREATE TABLE `qa_session` (
@@ -41,7 +41,7 @@ CREATE TABLE `qa_session` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   KEY `idx_user_time` (`user_id`, `start_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='qa_session';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会话';
 
 -- qa_message
 CREATE TABLE `qa_message` (
@@ -60,7 +60,7 @@ CREATE TABLE `qa_message` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   KEY `idx_session` (`session_id`, `create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='qa_message';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='消息';
 
 -- qa_unanswered
 CREATE TABLE `qa_unanswered` (
@@ -80,7 +80,7 @@ CREATE TABLE `qa_unanswered` (
   PRIMARY KEY (`id`),
   KEY `idx_status_time` (`status`, `create_time`),
   KEY `idx_user` (`user_id`, `create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='qa_unanswered';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='未解答记录';
 
 -- qa_ask_log
 CREATE TABLE `qa_ask_log` (
@@ -98,5 +98,5 @@ CREATE TABLE `qa_ask_log` (
   PRIMARY KEY (`id`),
   KEY `idx_create_time` (`create_time`),
   KEY `idx_hit_type` (`hit_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='qa_ask_log';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='提问日志';
 

@@ -20,7 +20,7 @@ CREATE TABLE `admin_user` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_username` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin_user';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='管理员';
 
 -- admin_role
 CREATE TABLE `admin_role` (
@@ -36,7 +36,7 @@ CREATE TABLE `admin_role` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_role_code` (`role_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin_role';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色';
 
 -- admin_user_role
 CREATE TABLE `admin_user_role` (
@@ -50,7 +50,7 @@ CREATE TABLE `admin_user_role` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_role` (`admin_user_id`, `role_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin_user_role';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='管理员角色关联';
 
 -- admin_announcement
 CREATE TABLE `admin_announcement` (
@@ -69,7 +69,7 @@ CREATE TABLE `admin_announcement` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   KEY `idx_status_publish` (`status`, `publish_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin_announcement';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='公告';
 
 -- admin_config
 CREATE TABLE `admin_config` (
@@ -88,7 +88,7 @@ CREATE TABLE `admin_config` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_config_key` (`config_key`),
   KEY `idx_group` (`config_group`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin_config';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置';
 
 -- admin_operation_log
 CREATE TABLE `admin_operation_log` (
@@ -113,7 +113,7 @@ CREATE TABLE `admin_operation_log` (
   KEY `idx_admin_time` (`admin_user_id`, `create_time`),
   KEY `idx_module_time` (`module`, `create_time`),
   KEY `idx_trace` (`trace_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin_operation_log';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志';
 
 -- admin_behavior_event
 CREATE TABLE `admin_behavior_event` (
@@ -133,5 +133,5 @@ CREATE TABLE `admin_behavior_event` (
   PRIMARY KEY (`id`),
   KEY `idx_type_time` (`event_type`, `event_time`),
   KEY `idx_user_time` (`user_id`, `event_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin_behavior_event';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='埋点事件';
 

@@ -23,7 +23,7 @@ CREATE TABLE `checkin_step_template` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_step_code` (`step_code`),
   KEY `idx_seq` (`seq`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='checkin_step_template';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报到步骤模板';
 
 -- checkin_material_item
 CREATE TABLE `checkin_material_item` (
@@ -40,7 +40,7 @@ CREATE TABLE `checkin_material_item` (
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
   KEY `idx_step` (`step_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='checkin_material_item';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='材料清单项';
 
 -- checkin_progress
 CREATE TABLE `checkin_progress` (
@@ -61,7 +61,7 @@ CREATE TABLE `checkin_progress` (
   UNIQUE KEY `uk_user_step` (`user_id`, `step_code`, `deleted`),
   KEY `idx_user_status` (`user_id`, `status`),
   KEY `idx_step_status` (`step_code`, `status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='checkin_progress';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报到进度记录';
 
 -- checkin_certificate
 CREATE TABLE `checkin_certificate` (
@@ -84,5 +84,5 @@ CREATE TABLE `checkin_certificate` (
   UNIQUE KEY `uk_cert_no` (`cert_no`),
   UNIQUE KEY `uk_qr_token` (`qr_token`),
   KEY `idx_user_batch` (`user_id`, `batch_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='checkin_certificate';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报到凭证';
 
