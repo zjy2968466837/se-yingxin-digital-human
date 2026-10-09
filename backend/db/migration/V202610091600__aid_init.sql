@@ -1,8 +1,6 @@
 -- aid-service：初始表结构（一期）
--- 依据 docs/数据建模.md 首次生成（24 张表；裁剪与合并见《需求分析文档》§8.4.1）；后续结构变更请在本目录新增迁移脚本，并同步更新该文档
+-- 依据 docs/数据建模.md 首次生成（24 张表）；后续结构变更请在本目录新增迁移脚本，并同步更新该文档
 -- 纪律：禁止物理外键、表名字段名全小写、id 为雪花 ID（非自增）、deleted 为 BIGINT（0=未删，删除写行 id）
-
--- 已合并：aid_application_material → aid_application.materials(JSON)
 
 -- aid_policy
 CREATE TABLE `aid_policy` (
@@ -39,8 +37,8 @@ CREATE TABLE `aid_application` (
   `audit_time` DATETIME(3) COMMENT '提交与审核时间',
   `auditor_id` BIGINT COMMENT '审核人（ACT-4）',
   `reject_reason` VARCHAR(255) COMMENT '驳回必填（F5.8 验收准则）',
+  `materials` JSON COMMENT '材料明细：[{name,url,hash,status}]，一份申请 1–3 项（材料名、文件地址、指纹、该项状态）',
   `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁，防并发审核覆盖（默认 0）',
-  `materials` JSON COMMENT '材料明细（原 aid_application_material 合并）：[{name,url,hash,status}]，见 §2.1 落地范围',
   `create_time` DATETIME(3) NOT NULL COMMENT '创建时间，持久层自动填充',
   `update_time` DATETIME(3) NOT NULL COMMENT '更新时间，持久层自动填充',
   `create_by` BIGINT COMMENT '创建人 id，系统写入为 0',

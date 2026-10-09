@@ -1,8 +1,6 @@
 -- content-service：初始表结构（一期）
--- 依据 docs/数据建模.md 首次生成（24 张表；裁剪与合并见《需求分析文档》§8.4.1）；后续结构变更请在本目录新增迁移脚本，并同步更新该文档
+-- 依据 docs/数据建模.md 首次生成（24 张表）；后续结构变更请在本目录新增迁移脚本，并同步更新该文档
 -- 纪律：禁止物理外键、表名字段名全小写、id 为雪花 ID（非自增）、deleted 为 BIGINT（0=未删，删除写行 id）
-
--- 本期按《需求分析文档》§8.4.1 裁剪，未建：content_club、content_file、content_learning_record
 
 -- content_article
 CREATE TABLE `content_article` (
