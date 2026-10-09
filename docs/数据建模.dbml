@@ -173,6 +173,7 @@ Table checkin_progress {
   indexes {
     (user_id, step_code, deleted) [unique, name: 'uk_user_step']
     (user_id, status) [index, name: 'idx_user_status']
+    (step_code, status) [index, name: 'idx_step_status']
   }
 
   Note: '报到进度记录'
@@ -310,6 +311,7 @@ Table qa_unanswered {
 
   indexes {
     (status, create_time) [index, name: 'idx_status_time']
+    (user_id, create_time) [index, name: 'idx_user']
   }
 
   Note: '未解答记录'
@@ -318,7 +320,7 @@ Table qa_unanswered {
 Table qa_ask_log {
   id                   BIGINT           [pk, note: '雪花 ID，主键']
   user_id              BIGINT           [note: '匿名访问时为空']
-  question_hash        VARCHAR(64)      [not null, note: '问题指纹（SHA-256），不存原文避免重复存敏感信息']
+  question_hash        CHAR(64)         [not null, note: '问题指纹（SHA-256 十六进制 64 位，定长），不存原文避免重复存敏感信息']
   hit_type             TINYINT          [not null, note: '1 缓存命中 / 2 问答库命中 / 3 LLM 兜底 / 4 未命中']
   cost_ms              INT              [not null, note: '响应耗时（NFR-1.1 度量）']
   session_id           BIGINT           [note: '关联会话']
@@ -401,6 +403,7 @@ Table aid_application {
   indexes {
     (user_id, policy_id, batch_id, deleted) [unique, name: 'uk_user_policy_batch']
     (status, create_time) [index, name: 'idx_status_time']
+    (policy_id, status) [index, name: 'idx_policy_status']
   }
 
   Note: '资助申请'
@@ -411,7 +414,7 @@ Table aid_application_material {
   application_id       BIGINT           [not null, note: '所属申请']
   material_name        VARCHAR(64)      [not null, note: '材料名称']
   file_url             VARCHAR(255)     [note: '文件地址（对象存储/静态资源）']
-  file_hash            VARCHAR(64)      [note: '文件指纹，防重复上传']
+  file_hash            CHAR(64)         [note: '文件指纹（SHA-256，定长），防重复上传']
   status               TINYINT          [not null, note: '1 待补 / 2 已提交 / 3 已通过 / 4 不通过']
   create_time          DATETIME(3)      [not null, note: '持久层自动填充，业务代码不得手写']
   update_time          DATETIME(3)      [not null, note: '持久层自动填充，业务代码不得手写']
@@ -541,6 +544,7 @@ Table content_club {
 
   indexes {
     (category) [index, name: 'idx_category']
+    (recruit_article_id) [index, name: 'idx_recruit']
   }
 
   Note: '社团名录'
@@ -562,6 +566,7 @@ Table content_learning_record {
 
   indexes {
     (user_id, article_id, deleted) [unique, name: 'uk_user_article']
+    (article_id) [index, name: 'idx_article']
   }
 
   Note: '学习记录'
@@ -573,7 +578,7 @@ Table content_file {
   category             TINYINT          [not null, note: '1 请假 / 2 证明 / 3 补办卡 / 4 其他']
   file_url             VARCHAR(255)     [not null, note: '下载地址']
   file_size            INT              [note: '字节数']
-  file_hash            VARCHAR(64)      [note: '校验值']
+  file_hash            CHAR(64)         [note: '校验值（SHA-256，定长）']
   download_count       BIGINT           [not null, note: '下载次数（默认 0，只增不减）']
   status               TINYINT          [not null, note: '1 启用 / 2 停用']
   create_time          DATETIME(3)      [not null, note: '持久层自动填充，业务代码不得手写']
@@ -716,6 +721,8 @@ Table admin_operation_log {
   target_type          VARCHAR(32)      [note: '操作对象']
   target_id            BIGINT           [note: '操作对象']
   detail               TEXT             [note: '变更摘要（脱敏后）']
+  before_value         JSON             [note: '变更前后值快照（仅记录被改动字段，脱敏后）；用于审计回溯（NFR-4.6）']
+  after_value          JSON             [note: '变更前后值快照（仅记录被改动字段，脱敏后）；用于审计回溯（NFR-4.6）']
   client_ip            VARCHAR(45)      [note: '来源 IP']
   result               TINYINT          [not null, note: '1 成功 / 2 失败']
   trace_id             VARCHAR(64)      [note: '链路 id，便于与日志系统关联']
