@@ -6,11 +6,13 @@
 
 仓库仍处于**骨架阶段**。以下基础设施**尚不存在**，不要假设可以直接调用：
 
-- 后端：每个服务只有 `XxxApplication` 启动类 + 一个 `PingController` 自检接口（已返回统一响应体）。
+- 后端：每个服务只有 `XxxApplication` 启动类 + 一个 `PingController` 自检接口（已返回统一响应体）；
+  `auth-service` 已有登录/登出（F1.1 / F1.8）与 `AuthUser` 实体 + Mapper 作为分层样板。
   横向能力由公共模块提供：统一响应体 / 错误码 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson 配置（`common-web` 自动装配，已有单元测试）。
-  **仍缺**：Service / Mapper / Entity 分层与业务代码、网关鉴权（S3）、业务单元测试。
-- 鉴权：`auth-service` 目前没有任何认证逻辑——没有 JWT 依赖、没有签发/校验、没有拦截器或 Filter，
-  网关也没有鉴权过滤器。前端发的 `Bearer` token 暂时无人验证。
+  **仍缺**：其余服务的 Service / Mapper / Entity 分层与业务代码（S5 纵向打样未做）、前端仍是静态页、业务单元测试。
+- 鉴权：**已打通（S3）** —— `auth-service` 签发 JWT（HS256，负载只放 `userId`/`role`，会话 `jti→userId/role` 存 Redis，TTL 2h）；
+  网关 `AuthGlobalFilter` 剥离入站 `X-User-*` 后校验签名与会话，再注入用户上下文；**登出即删会话键，旧令牌立即失效**。
+  本地演示账号：学号 `20260001` / 口令 `123456`（种子脚本 `backend/db/migration/V202610091700__auth_seed_demo_user.sql`，**云端部署前请删除**）。
 - 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_init.sql`（8 个文件，裁剪后 **24 张表**），本地库已按脚本建表。
   Flyway 依赖尚未接入（父 pom 的 `db` profile 待补），当前手工执行脚本；`backend/init-sql/01-init.sql` 仍只执行 `CREATE DATABASE`。
 - 前端：`admin-web` 只有登录页与连通性自检页（`QaView.vue` 是空占位），没有列表/表单等 CRUD 范例可抄；

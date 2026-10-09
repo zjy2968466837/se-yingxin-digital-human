@@ -4,6 +4,14 @@ server:
 spring:
   application:
     name: gateway
+  # 会话校验用（登出即失效，F1.8）：本地 Docker Redis 无密码，云端用 REDIS_PASSWORD 注入
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 3s
   cloud:
     gateway:
       # Spring Cloud Gateway 4.3+（2025.0.x）配置前缀为 server.webflux
@@ -49,6 +57,14 @@ spring:
                 allowedMethods: "*"
                 allowedHeaders: "*"
                 allowCredentials: true
+
+# 鉴权（开发规范 §4.2）：密钥必须与 auth-service 一致，由 JWT_SECRET 注入
+yingxin:
+  auth:
+    enabled: true
+    jwt-secret: ${JWT_SECRET:yingxin-local-dev-jwt-secret-change-me-32bytes}
+    # 额外放行：默认空。/actuator/**、/swagger-ui.html 本地调试可临时加，云端必须收敛
+    extra-whitelist: []
 
 management:
   endpoints:

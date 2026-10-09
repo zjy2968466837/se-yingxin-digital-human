@@ -32,6 +32,12 @@ spring:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss
 
+# 认证参数（开发规范 §4.1）：密钥必须由环境变量注入，本地默认值仅供开发
+yingxin:
+  auth:
+    jwt-secret: ${JWT_SECRET:yingxin-local-dev-jwt-secret-change-me-32bytes}
+    access-token-ttl: 2h
+
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   type-aliases-package: com.sicnu.yingxin.auth.entity

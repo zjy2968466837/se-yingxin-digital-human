@@ -44,6 +44,8 @@
     <mybatis-plus.version>3.5.17</mybatis-plus.version>
     <!-- springdoc 2.x 对应 Spring Boot 3；3.x 对应 Spring Boot 4，切勿混用 -->
     <springdoc.version>2.9.1</springdoc.version>
+    <!-- JWT（HS256）：只用 auth-service 签发、gateway 校验，其他服务不引 -->
+    <jjwt.version>0.12.6</jjwt.version>
   </properties>
 
   <dependencyManagement>
@@ -76,6 +78,21 @@
         <groupId>com.baomidou</groupId>
         <artifactId>mybatis-plus-jsqlparser</artifactId>
         <version>${mybatis-plus.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-jackson</artifactId>
+        <version>${jjwt.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springdoc</groupId>
