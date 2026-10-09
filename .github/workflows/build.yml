@@ -41,7 +41,7 @@ jobs:
           cache: maven
 
       # 用 ./mvnw 而非 mvn：Maven 版本由仓库固定，不依赖 runner 预装版本
-      - name: 构建全部 9 个模块
+      - name: 构建全部模块
         working-directory: backend
         run: ./mvnw -B clean install -DskipTests
 
@@ -73,8 +73,10 @@ jobs:
         working-directory: frontend/admin-web
         run: pnpm build
 
-  miniprogram:
-    name: 小程序构建
+  # 一期只做网页端（需求分析文档 §8.4.1）：本任务改构建 H5 产物。
+  # 小程序端已裁剪；如日后重新启用，把 run 改回 pnpm build:mp-weixin 即可。
+  student-web:
+    name: 学生端网页构建（H5）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -94,6 +96,6 @@ jobs:
         working-directory: frontend/miniprogram
         run: pnpm install --frozen-lockfile
 
-      - name: 构建微信小程序
+      - name: 构建学生端网页（H5）
         working-directory: frontend/miniprogram
-        run: pnpm build:mp-weixin
+        run: pnpm build:h5

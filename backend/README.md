@@ -46,7 +46,7 @@ backend/
 
 ```bash
 cd backend
-./mvnw clean install -DskipTests              # 首次构建（父 POM 聚合全部 9 个模块）
+./mvnw clean install -DskipTests              # 首次构建（父 POM 聚合全部模块）
 ./mvnw -pl services/gateway spring-boot:run   # 启动网关
 ./mvnw -pl services/auth-service spring-boot:run   # 启动业务服务（示例）
 ```
