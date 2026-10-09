@@ -84,8 +84,7 @@ CREATE TABLE `admin_config` (
   `update_by` BIGINT COMMENT '修改人 id，系统写入为 0',
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_config_key` (`config_key`),
-  KEY `idx_group` (`config_group`)
+  UNIQUE KEY `uk_config_key` (`config_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置';
 
 -- admin_operation_log

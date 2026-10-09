@@ -96,7 +96,6 @@ CREATE TABLE `qa_ask_log` (
   `update_by` BIGINT COMMENT '修改人 id，系统写入为 0',
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
-  KEY `idx_create_time` (`create_time`),
-  KEY `idx_hit_type` (`hit_type`)
+  KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='提问日志';
 

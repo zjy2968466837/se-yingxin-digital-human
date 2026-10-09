@@ -107,7 +107,6 @@ Table checkin_step_template {
 
   indexes {
     (step_code) [unique, name: 'uk_step_code']
-    (seq) [name: 'idx_seq']
   }
 
   Note: '报到步骤模板'
@@ -291,7 +290,6 @@ Table qa_ask_log {
 
   indexes {
     (create_time) [name: 'idx_create_time']
-    (hit_type) [name: 'idx_hit_type']
   }
 
   Note: '提问日志'
@@ -372,7 +370,7 @@ Table life_repair_order {
   indexes {
     (order_no) [unique, name: 'uk_order_no']
     (user_id, create_time) [name: 'idx_user_time']
-    (status) [name: 'idx_status']
+    (status, create_time) [name: 'idx_status_time']
   }
 
   Note: '报修单'
@@ -525,7 +523,6 @@ Table admin_config {
 
   indexes {
     (config_key) [unique, name: 'uk_config_key']
-    (config_group) [name: 'idx_group']
   }
 
   Note: '系统配置'

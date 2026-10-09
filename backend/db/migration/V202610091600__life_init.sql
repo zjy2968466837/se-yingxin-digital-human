@@ -23,7 +23,7 @@ CREATE TABLE `life_repair_order` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_order_no` (`order_no`),
   KEY `idx_user_time` (`user_id`, `create_time`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status_time` (`status`, `create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报修单';
 
 -- life_service_info

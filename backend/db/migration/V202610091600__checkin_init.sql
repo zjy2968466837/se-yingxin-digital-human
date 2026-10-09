@@ -19,8 +19,7 @@ CREATE TABLE `checkin_step_template` (
   `update_by` BIGINT COMMENT '修改人 id，系统写入为 0',
   `deleted` BIGINT NOT NULL COMMENT '逻辑删除：0=未删除；删除时写入本行 id',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_step_code` (`step_code`),
-  KEY `idx_seq` (`seq`)
+  UNIQUE KEY `uk_step_code` (`step_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报到步骤模板';
 
 -- checkin_material_item
