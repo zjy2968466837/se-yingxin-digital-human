@@ -43,7 +43,7 @@ jobs:
       # 用 ./mvnw 而非 mvn：Maven 版本由仓库固定，不依赖 runner 预装版本
       - name: 构建全部模块
         working-directory: backend
-        run: ./mvnw -B clean install -DskipTests
+        run: ./mvnw -B clean install
 
   admin-web:
     name: 管理后台构建
