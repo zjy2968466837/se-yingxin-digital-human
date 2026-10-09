@@ -65,7 +65,7 @@ cd frontend/miniprogram && pnpm install && pnpm dev:mp-weixin   # 产物 dist/de
 - CI 用 `pnpm install --frozen-lockfile`：改了 `package.json` 就必须本地 `pnpm install` 同步锁文件，否则 CI 直接失败。
 - 本地 MySQL 的 `lower_case_table_names=1` **只在数据卷首次初始化时生效**，改动后需 `docker compose down -v` 重建。
 - 本地与云端环境相反：云端 MySQL 强制 SSL（`MYSQL_SSL_MODE=REQUIRED`）、Redis 带密码；本地都是无密码/无 SSL。
-  涉及数据库与缓存的改动要同时兼顾两种环境，见 [docs/部署指南.md](docs/部署指南.md)。
+  涉及数据库与缓存的改动要同时兼顾两种环境；云端编排见 `backend/docker-compose.prod.yml`。
 - `frontend/miniprogram/src/api/request.js` 的 baseURL 目前硬编码 `http://localhost:8080/api`，
   真机调试需改域名或关闭合法域名校验。
 - 本地同时启动 9 个服务约需 3.8G 内存，按需只起目标服务即可。

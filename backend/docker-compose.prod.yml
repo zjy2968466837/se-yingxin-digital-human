@@ -3,7 +3,7 @@
 # MySQL 与 Redis 不使用容器：
 #   - MySQL 用 Azure Database for MySQL（PaaS），连接信息走 .env.prod
 #   - Redis 用云服务器上已有的 systemd 服务（127.0.0.1:6379）
-# 详见 docs/部署指南.md。
+# 本文件即云上编排的事实来源（原《部署指南》已从仓库移除，部署说明待补）。
 #
 # 用法（backend/ 目录下）：
 #   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build

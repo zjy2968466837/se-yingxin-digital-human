@@ -6,7 +6,7 @@ spring:
     name: admin-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（见 docs/部署指南.md）
+    # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（部署编排见 backend/docker-compose.prod.yml）
     # 云端 Azure MySQL 强制 SSL，需设 MYSQL_SSL_MODE=REQUIRED
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:yingxin}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&sslMode=${MYSQL_SSL_MODE:PREFERRED}
     username: ${MYSQL_USER:yingxin}

@@ -121,5 +121,5 @@ Windows 则把 `docs/maven-settings.xml` 复制到 `C:\Users\<用户名>\.m2\set
 2. `./mvnw -pl services/gateway spring-boot:run`
 3. 其余按需启动
 
-环境一致性约定与版本清单见 [../docs/开发环境版本.md](../docs/开发环境版本.md)，
-云上部署见 [../docs/部署指南.md](../docs/部署指南.md)。
+环境一致性约定与版本清单见 [../docs/开发规范.md](../docs/开发规范.md) §10，
+云端编排见 [docker-compose.prod.yml](docker-compose.prod.yml)。
