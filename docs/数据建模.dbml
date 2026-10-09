@@ -32,7 +32,7 @@ Table auth_user {
   indexes {
     (openid) [unique, name: 'uk_openid']
     (student_no) [unique, name: 'uk_student_no']
-    (phone) [index, name: 'idx_phone']
+    (phone) [name: 'idx_phone']
   }
 
   Note: '用户账号'
@@ -58,7 +58,7 @@ Table auth_identity {
 
   indexes {
     (user_id) [unique, name: 'uk_user_id']
-    (college, batch_id) [index, name: 'idx_college_batch']
+    (college, batch_id) [name: 'idx_college_batch']
   }
 
   Note: '身份档案'
@@ -82,8 +82,8 @@ Table auth_push_record {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (user_id, status) [index, name: 'idx_user_status']
-    (create_time) [index, name: 'idx_create_time']
+    (user_id, status) [name: 'idx_user_status']
+    (create_time) [name: 'idx_create_time']
   }
 
   Note: '待办推送记录'
@@ -104,8 +104,8 @@ Table auth_login_log {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (user_id, create_time) [index, name: 'idx_user_time']
-    (create_time) [index, name: 'idx_create_time']
+    (user_id, create_time) [name: 'idx_user_time']
+    (create_time) [name: 'idx_create_time']
   }
 
   Note: '登录日志'
@@ -129,7 +129,7 @@ Table checkin_step_template {
 
   indexes {
     (step_code) [unique, name: 'uk_step_code']
-    (seq) [index, name: 'idx_seq']
+    (seq) [name: 'idx_seq']
   }
 
   Note: '报到步骤模板'
@@ -149,7 +149,7 @@ Table checkin_material_item {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (step_code) [index, name: 'idx_step']
+    (step_code) [name: 'idx_step']
   }
 
   Note: '材料清单项'
@@ -172,8 +172,8 @@ Table checkin_progress {
 
   indexes {
     (user_id, step_code, deleted) [unique, name: 'uk_user_step']
-    (user_id, status) [index, name: 'idx_user_status']
-    (step_code, status) [index, name: 'idx_step_status']
+    (user_id, status) [name: 'idx_user_status']
+    (step_code, status) [name: 'idx_step_status']
   }
 
   Note: '报到进度记录'
@@ -199,7 +199,7 @@ Table checkin_certificate {
   indexes {
     (cert_no) [unique, name: 'uk_cert_no']
     (qr_token) [unique, name: 'uk_qr_token']
-    (user_id, batch_id) [index, name: 'idx_user_batch']
+    (user_id, batch_id) [name: 'idx_user_batch']
   }
 
   Note: '报到凭证'
@@ -219,7 +219,7 @@ Table checkin_exception_guide {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (exception_type) [index, name: 'idx_type']
+    (exception_type) [name: 'idx_type']
   }
 
   Note: '异常处理指引'
@@ -244,8 +244,9 @@ Table qa_question {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (category, status) [index, name: 'idx_category_status']
-    (question, synonyms) [index, name: 'idx_question']
+    (category, status) [name: 'idx_category_status']
+    // FULLTEXT WITH PARSER ngram（中文分词；DBML 无此 setting，导出 DDL 后手工补）
+    (question, synonyms) [name: 'idx_question']
   }
 
   Note: '问答条目'
@@ -266,7 +267,7 @@ Table qa_session {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (user_id, start_time) [index, name: 'idx_user_time']
+    (user_id, start_time) [name: 'idx_user_time']
   }
 
   Note: '会话'
@@ -288,7 +289,7 @@ Table qa_message {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (session_id, create_time) [index, name: 'idx_session']
+    (session_id, create_time) [name: 'idx_session']
   }
 
   Note: '消息'
@@ -310,8 +311,8 @@ Table qa_unanswered {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (status, create_time) [index, name: 'idx_status_time']
-    (user_id, create_time) [index, name: 'idx_user']
+    (status, create_time) [name: 'idx_status_time']
+    (user_id, create_time) [name: 'idx_user']
   }
 
   Note: '未解答记录'
@@ -331,8 +332,8 @@ Table qa_ask_log {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (create_time) [index, name: 'idx_create_time']
-    (hit_type) [index, name: 'idx_hit_type']
+    (create_time) [name: 'idx_create_time']
+    (hit_type) [name: 'idx_hit_type']
   }
 
   Note: '提问日志'
@@ -375,7 +376,7 @@ Table aid_policy {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (category, status) [index, name: 'idx_category_status']
+    (category, status) [name: 'idx_category_status']
   }
 
   Note: '资助政策'
@@ -402,8 +403,8 @@ Table aid_application {
 
   indexes {
     (user_id, policy_id, batch_id, deleted) [unique, name: 'uk_user_policy_batch']
-    (status, create_time) [index, name: 'idx_status_time']
-    (policy_id, status) [index, name: 'idx_policy_status']
+    (status, create_time) [name: 'idx_status_time']
+    (policy_id, status) [name: 'idx_policy_status']
   }
 
   Note: '资助申请'
@@ -423,7 +424,7 @@ Table aid_application_material {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (application_id) [index, name: 'idx_application']
+    (application_id) [name: 'idx_application']
   }
 
   Note: '申请材料明细'
@@ -449,8 +450,8 @@ Table life_repair_order {
 
   indexes {
     (order_no) [unique, name: 'uk_order_no']
-    (user_id, create_time) [index, name: 'idx_user_time']
-    (status) [index, name: 'idx_status']
+    (user_id, create_time) [name: 'idx_user_time']
+    (status) [name: 'idx_status']
   }
 
   Note: '报修单'
@@ -470,7 +471,7 @@ Table life_repair_log {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (order_id, create_time) [index, name: 'idx_order']
+    (order_id, create_time) [name: 'idx_order']
   }
 
   Note: '报修流转记录'
@@ -494,7 +495,7 @@ Table life_service_info {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (category, status) [index, name: 'idx_category_status']
+    (category, status) [name: 'idx_category_status']
   }
 
   Note: '生活服务信息'
@@ -521,8 +522,8 @@ Table content_article {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (module, status) [index, name: 'idx_module_status']
-    (publish_time) [index, name: 'idx_publish_time']
+    (module, status) [name: 'idx_module_status']
+    (publish_time) [name: 'idx_publish_time']
   }
 
   Note: '内容条目'
@@ -543,8 +544,8 @@ Table content_club {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (category) [index, name: 'idx_category']
-    (recruit_article_id) [index, name: 'idx_recruit']
+    (category) [name: 'idx_category']
+    (recruit_article_id) [name: 'idx_recruit']
   }
 
   Note: '社团名录'
@@ -566,7 +567,7 @@ Table content_learning_record {
 
   indexes {
     (user_id, article_id, deleted) [unique, name: 'uk_user_article']
-    (article_id) [index, name: 'idx_article']
+    (article_id) [name: 'idx_article']
   }
 
   Note: '学习记录'
@@ -588,7 +589,7 @@ Table content_file {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (category, status) [index, name: 'idx_category_status']
+    (category, status) [name: 'idx_category_status']
   }
 
   Note: '常用表格文件'
@@ -663,7 +664,7 @@ Table admin_role_scope {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (role_id) [index, name: 'idx_role']
+    (role_id) [name: 'idx_role']
   }
 
   Note: '角色数据权限'
@@ -685,7 +686,7 @@ Table admin_announcement {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (status, publish_time) [index, name: 'idx_status_publish']
+    (status, publish_time) [name: 'idx_status_publish']
   }
 
   Note: '公告'
@@ -707,7 +708,7 @@ Table admin_config {
 
   indexes {
     (config_key) [unique, name: 'uk_config_key']
-    (config_group) [index, name: 'idx_group']
+    (config_group) [name: 'idx_group']
   }
 
   Note: '系统配置'
@@ -733,9 +734,9 @@ Table admin_operation_log {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (admin_user_id, create_time) [index, name: 'idx_admin_time']
-    (module, create_time) [index, name: 'idx_module_time']
-    (trace_id) [index, name: 'idx_trace']
+    (admin_user_id, create_time) [name: 'idx_admin_time']
+    (module, create_time) [name: 'idx_module_time']
+    (trace_id) [name: 'idx_trace']
   }
 
   Note: '操作日志'
@@ -757,8 +758,8 @@ Table admin_behavior_event {
   deleted              BIGINT           [not null, default: 0, note: '逻辑删除：0=未删除；删除时写入本行 id（文档 §5.1）']
 
   indexes {
-    (event_type, event_time) [index, name: 'idx_type_time']
-    (user_id, event_time) [index, name: 'idx_user_time']
+    (event_type, event_time) [name: 'idx_type_time']
+    (user_id, event_time) [name: 'idx_user_time']
   }
 
   Note: '埋点事件'
