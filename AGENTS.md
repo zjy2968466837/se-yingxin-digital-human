@@ -12,7 +12,9 @@
   **仍缺**：其余服务的 Service / Mapper / Entity 分层与业务代码（S5 纵向打样未做）、前端仍是静态页、业务单元测试。
 - 鉴权：**已打通（S3）** —— `auth-service` 签发 JWT（HS256，负载只放 `userId`/`role`，会话 `jti→userId/role` 存 Redis，TTL 2h）；
   网关 `AuthGlobalFilter` 剥离入站 `X-User-*` 后校验签名与会话，再注入用户上下文；**登出即删会话键，旧令牌立即失效**。
-  本地演示账号：学号 `20260001` / 口令 `123456`（种子脚本 `backend/db/migration/V202610091700__auth_seed_demo_user.sql`，**云端部署前请删除**）。
+  **本地联调入口是夹具、不是登录接口**：`POST http://localhost:8100/api/dev/token?userId=123&role=STUDENT`（签发）
+  与 `DELETE http://localhost:8100/api/dev/session/{jti}`（等价登出）。默认关闭，需 `AUTH_FIXTURE_ENABLED=true` 启动 auth-service；
+  该路径**不在网关白名单**，只能直连 8100；业务登录（F1.1）在业务阶段实现，实现后删除夹具。
 - 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_init.sql`（8 个文件，裁剪后 **24 张表**），本地库已按脚本建表。
   Flyway 依赖尚未接入（父 pom 的 `db` profile 待补），当前手工执行脚本；`backend/init-sql/01-init.sql` 仍只执行 `CREATE DATABASE`。
 - 前端：`admin-web` 只有登录页与连通性自检页（`QaView.vue` 是空占位），没有列表/表单等 CRUD 范例可抄；
@@ -32,6 +34,32 @@
   §6 无外键下的完整性对策；完整性规则编号 DI-1–DI-22 在需求分析文档 §7.2。
   模型文件 `docs/数据建模.dbml`（可导入 dbdiagram.io 出图与导出 DDL）**由文档生成，勿手改**；导出的 DDL 必须先删 `FOREIGN KEY`。
 - 文档已于 2026-10-09 整理合并：`docs/` 现为 7 份，索引见 [README.md](README.md)。
+
+## 工程阶段界碑（2026-10-09 定，勿模糊）
+
+**脚手架阶段（当前所处）**：目标是"新成员 clone 下来就有一致形态"，判据是《需求分析文档》§2.6.1 的 8 项验证。
+
+| 步骤 | 状态 |
+|---|---|
+| S1 `common-core`（响应体/错误码/异常/常量） | ✅ |
+| S2 `common-web`（全局异常/traceId/用户上下文/MP·Redis·Jackson 配置） | ✅ |
+| S3 网关统一鉴权（剥离伪造头 → 校验签名 → 校验会话 → 注入上下文） | ✅ |
+| S4 迁移脚本与 24 张表（本地库已建） | ✅ |
+| S5 单服务纵向打样（建议 qa-service） | ❌ 未做 |
+
+- **S5 的范围必须卡死**：只做「Controller → Service → Mapper → Redis 的最小闭环 + 单元测试」，
+  **不实现 FR-3 的任何功能逻辑**（问答检索、意图识别、多轮对话都不做）——它的交付物是"可照抄的样板"，不是功能。
+- **脚手架阶段不写业务代码**。需要验证的东西一律做成**夹具**（默认关闭、不进白名单、上云前必须关掉、业务实现后删除）。
+- **S1–S5 全部完成 = 脚手架阶段结束**；此后按《需求分析文档》的 **FR 编号逐项实现业务**，第一项是 F1.1（学号密码登录 + 学校身份源对接）。
+
+**现有夹具清单**
+
+| 夹具 | 位置 | 开关 | 说明 |
+|---|---|---|---|
+| 令牌签发 | `POST /api/dev/token?userId=&role=`（auth-service :8100） | `AUTH_FIXTURE_ENABLED=true`（默认 false） | 验证网关鉴权与 `登出即失效`（F1.8）用；不校验密码 |
+| 删除会话 | `DELETE /api/dev/session/{jti}`（auth-service :8100） | 同上 | 等价登出，用于验证旧令牌立即失效 |
+
+> ⚠️ **上云前必须确认 `AUTH_FIXTURE_ENABLED=false`**（或改用环境变量注入 false）；夹具路径不在网关白名单，经网关调用一律 401。
 
 ## 常用命令
 

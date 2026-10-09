@@ -37,6 +37,10 @@ yingxin:
   auth:
     jwt-secret: ${JWT_SECRET:yingxin-local-dev-jwt-secret-change-me-32bytes}
     access-token-ttl: 2h
+    # 脚手架验证夹具（不是业务功能）：开启后暴露 POST /api/dev/token、DELETE /api/dev/session/{jti}
+    # 仅本地联调用 `AUTH_FIXTURE_ENABLED=true` 开启；**上云前必须为 false**
+    fixture:
+      enabled: ${AUTH_FIXTURE_ENABLED:false}
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml

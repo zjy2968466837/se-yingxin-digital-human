@@ -21,6 +21,23 @@ public class AuthProperties {
     /** 访问令牌有效期（开发规范 §4.1：2 小时） */
     private Duration accessTokenTtl = Duration.ofHours(2);
 
+    /** 脚手架验证夹具（默认关闭；不是业务功能，见 DevTokenFixtureController） */
+    private Fixture fixture = new Fixture();
+
+    public static class Fixture {
+
+        /** 是否暴露 /api/dev/** 令牌签发夹具；上云前必须为 false */
+        private boolean enabled = false;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+    }
+
     public String getJwtSecret() {
         return jwtSecret;
     }
@@ -35,5 +52,13 @@ public class AuthProperties {
 
     public void setAccessTokenTtl(Duration accessTokenTtl) {
         this.accessTokenTtl = accessTokenTtl;
+    }
+
+    public Fixture getFixture() {
+        return fixture;
+    }
+
+    public void setFixture(Fixture fixture) {
+        this.fixture = fixture;
     }
 }
