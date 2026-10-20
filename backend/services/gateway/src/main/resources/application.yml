@@ -4,6 +4,18 @@ server:
 spring:
   application:
     name: gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 0
   cloud:
     gateway:
       # Spring Cloud Gateway 4.3+（2025.0.x）配置前缀为 server.webflux
@@ -49,6 +61,17 @@ spring:
                 allowedMethods: "*"
                 allowedHeaders: "*"
                 allowCredentials: true
+
+yingxin:
+  jwt:
+    secret: ${JWT_SECRET:yingxin-dev-secret-key-must-be-over-32-bytes-ok}
+  gateway:
+    auth:
+      whitelist:
+        - /api/*/ping
+        - /api/auth/login
+        - /api/auth/login/**
+        - /api/public/**
 
 management:
   endpoints:
