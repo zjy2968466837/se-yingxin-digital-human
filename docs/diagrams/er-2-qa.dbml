@@ -1,0 +1,70 @@
+// ============================================================
+// 自动生成，请勿手改 —— 源：docs/数据建模.dbml（表）+ docs/数据建模.md §4.1（关系）
+// 生成脚本：scripts/split_dbml.py
+// 用途：仅用于出图（图4-2 ER-2 智能问答（qa））
+// 字段：出图用关键字段（每表 3–5 列），全字段明细见《数据库设计说明书》4.2
+// 注意：不要从本文件导出 DDL；DDL 只从 docs/数据建模.dbml 全量导出
+// 说明：消息归属会话；未解答与提问日志按用户维度逻辑关联 auth_user。
+// ============================================================
+
+Table qa_question {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  question             VARCHAR(255)     [not null, note: '标准问法']
+  category             VARCHAR(32)      [not null, note: '知识域（对应意图分类）']
+  status               TINYINT          [not null, note: '1 已发布 / 2 草稿 / 3 停用']
+  Note: '问答条目'
+}
+
+Table qa_session {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [not null, note: '学生']
+  channel              TINYINT          [not null, note: '1 学生端网页 / 2 管理后台']
+  start_time           DATETIME(3)      [not null, note: '会话开始']
+  Note: '会话'
+}
+
+Table qa_message {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  session_id           BIGINT           [not null, note: '所属会话']
+  role                 TINYINT          [not null, note: '1 用户 / 2 数字人']
+  question_id          BIGINT           [note: '命中的问答条目（未命中为空）']
+  confidence           DECIMAL(5,2)     [note: '置信度 0–100']
+  Note: '消息'
+}
+
+Table qa_unanswered {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  question             VARCHAR(255)     [not null, note: '原始问题']
+  user_id              BIGINT           [note: '来源']
+  status               TINYINT          [not null, note: '1 待处理 / 2 已转人工 / 3 已补录问答库 / 4 已忽略']
+  handler_id           BIGINT           [note: '处理人（志愿者/辅导员，ACT-3）']
+  Note: '未解答记录'
+}
+
+Table qa_ask_log {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [note: '匿名访问时为空']
+  hit_type             TINYINT          [not null, note: '1 缓存命中 / 2 问答库命中 / 3 LLM 兜底 / 4 未命中']
+  cost_ms              INT              [not null, note: '响应耗时（NFR-1.1 度量）']
+  Note: '提问日志'
+}
+
+Table auth_user {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  student_no           VARCHAR(32)      [note: '学号，与 openid 至少一个非空']
+  openid               VARCHAR(64)      [note: '微信 openid，唯一']
+  status               TINYINT          [not null, note: '1 正常 / 2 禁用 / 3 未激活']
+  Note: '用户账号'
+}
+
+// ---- 关系（取自《数据建模》§4.1）----
+// 1 : N 会话
+Ref: auth_user.id > qa_session.user_id
+// 1 : N 消息
+Ref: qa_session.id > qa_message.session_id
+// 0..1 : N 命中条目
+Ref: qa_question.id > qa_message.question_id
+// 1 : N 待处理
+Ref: auth_user.id > qa_unanswered.user_id
+// 1 : N 提问日志
+Ref: auth_user.id > qa_ask_log.user_id
