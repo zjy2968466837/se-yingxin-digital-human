@@ -42,6 +42,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+yingxin:
+  api-doc:
+    title: 管理后台服务接口文档
+    description: FR-9 管理后台：话术配置、问答库、公告、统计与分权
+
 management:
   endpoints:
     web:

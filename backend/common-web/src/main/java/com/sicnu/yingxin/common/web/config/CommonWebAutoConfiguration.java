@@ -25,6 +25,7 @@ import org.springframework.core.Ordered;
         MybatisPlusConfig.class,
         AuditMetaObjectHandler.class,
         RedisConfig.class,
+        OpenApiConfig.class,
 })
 public class CommonWebAutoConfiguration {
 

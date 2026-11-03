@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: content-service
+  servlet:
+    multipart:
+      # 单文件上限与需求文档一致（10 MB）；一次批量最多 10 个，故请求上限放宽到 120 MB
+      max-file-size: 10MB
+      max-request-size: 120MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（部署编排见 backend/docker-compose.prod.yml）
@@ -32,6 +37,33 @@ spring:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss
 
+yx:
+  file:
+    # 存储后端：local（默认，离线可用）/ minio（本地自建，docker compose 已带）/ oss（云端）
+    provider: ${FILE_PROVIDER:local}
+    local:
+      root: ${FILE_LOCAL_ROOT:./data/files}
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      bucket: ${MINIO_BUCKET:yingxin}
+      access-key: ${MINIO_ACCESS_KEY:minioadmin}
+      secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    oss:
+      # 云端通过环境变量注入；本地留空即可（provider 不是 oss 时不会实例化）
+      endpoint: ${OSS_ENDPOINT:}
+      bucket: ${OSS_BUCKET:}
+      access-key-id: ${OSS_ACCESS_KEY_ID:}
+      access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+    upload:
+      # 分片临时目录与会话参数（会话存 Redis，TTL 默认 24 小时）
+      dir: ${FILE_CHUNK_DIR:${user.home}/.yingxin/chunks}
+      chunk-size: ${FILE_CHUNK_SIZE:5242880}
+      max-file-size: ${FILE_MAX_SIZE:104857600}
+      ttl-hours: ${FILE_UPLOAD_TTL_HOURS:24}
+      max-batch-count: ${FILE_MAX_BATCH_COUNT:10}
+      presign-ttl-minutes: ${FILE_PRESIGN_TTL_MINUTES:30}
+      allowed-extensions: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,txt
+
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   type-aliases-package: com.sicnu.yingxin.content.entity
@@ -41,6 +73,11 @@ mybatis-plus:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+yingxin:
+  api-doc:
+    title: 安全教育与入学适应服务接口文档
+    description: FR-7 / FR-8 安全教育、入学适应与内容发布
 
 management:
   endpoints:

@@ -42,6 +42,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+yingxin:
+  api-doc:
+    title: 智能问答服务接口文档
+    description: FR-3 智能问答：问答库、意图识别、多轮对话（S5 阶段仅有会话样板）
+
 management:
   endpoints:
     web:

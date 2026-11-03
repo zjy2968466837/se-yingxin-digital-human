@@ -1,0 +1,64 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "资助与绿色通道服务接口文档",
+    "description": "FR-5 资助与绿色通道：政策匹配、在线申请与审核",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8104",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "资助与绿色通道",
+      "description": "F11.2 连通性自检：验证服务启动、网关路由与统一响应体"
+    }
+  ],
+  "paths": {
+    "/api/aid/ping": {
+      "get": {
+        "tags": [
+          "资助与绿色通道"
+        ],
+        "summary": "连通性自检",
+        "description": "返回服务名、UP 状态与服务器时间",
+        "operationId": "ping",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultMapStringObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ResultMapStringObject": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      }
+    }
+  }
+}

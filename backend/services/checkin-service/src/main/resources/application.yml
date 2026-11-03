@@ -42,6 +42,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+yingxin:
+  api-doc:
+    title: 报到全流程导引服务接口文档
+    description: FR-2 报到全流程导引：步骤、材料、进度与凭证
+
 management:
   endpoints:
     web:

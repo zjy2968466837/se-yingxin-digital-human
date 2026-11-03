@@ -1,0 +1,46 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost_info": {
+      "query_cost": "10158.75"
+    },
+    "ordering_operation": {
+      "using_filesort": false,
+      "table": {
+        "table_name": "qa_ask_log",
+        "access_type": "range",
+        "possible_keys": [
+          "idx_create_time"
+        ],
+        "key": "idx_create_time",
+        "used_key_parts": [
+          "create_time"
+        ],
+        "key_length": "7",
+        "rows_examined_per_scan": 49550,
+        "rows_produced_per_join": 49550,
+        "filtered": "100.00",
+        "index_condition": "(`yingxin`.`qa_ask_log`.`create_time` > TIMESTAMP'2026-09-15 00:00:00')",
+        "cost_info": {
+          "read_cost": "5203.75",
+          "eval_cost": "4955.00",
+          "prefix_cost": "10158.75",
+          "data_read_per_join": "15M"
+        },
+        "used_columns": [
+          "id",
+          "user_id",
+          "question_hash",
+          "hit_type",
+          "cost_ms",
+          "session_id",
+          "create_time",
+          "update_time",
+          "create_by",
+          "update_by",
+          "deleted"
+        ]
+      }
+    }
+  }
+}

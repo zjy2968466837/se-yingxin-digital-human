@@ -22,6 +22,7 @@
     <!-- 公共模块必须排在服务之前：gateway → common-core；services/* → common-web → common-core -->
     <module>common-core</module>
     <module>common-web</module>
+    <module>common-file</module>
     <module>services/gateway</module>
     <module>services/auth-service</module>
     <module>services/qa-service</module>
@@ -59,6 +60,11 @@
       <dependency>
         <groupId>com.sicnu.yingxin</groupId>
         <artifactId>common-web</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sicnu.yingxin</groupId>
+        <artifactId>common-file</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

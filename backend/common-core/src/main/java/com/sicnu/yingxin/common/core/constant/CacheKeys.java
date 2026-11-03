@@ -17,6 +17,12 @@ public final class CacheKeys {
     /** 问答热点头：yx:qa:hot:{questionHash}，命中即回，内容发布时失效 */
     public static final String QA_HOT = PREFIX + "qa:hot:";
 
+    /** 会话详情：yx:qa:session:{id}，读多写少，删除/更新时主动失效 */
+    public static final String QA_SESSION = PREFIX + "qa:session:";
+
+    /** 分片上传会话：yx:content:upload:{uploadId}；已收分片序号在这个 key 后加 :chunks */
+    public static final String CONTENT_UPLOAD = PREFIX + "content:upload:";
+
     /** 限流计数：yx:<服务>:rate:{标识}，固定短 TTL */
     public static final String RATE_LIMIT = "%s:rate:%s";
 
@@ -26,6 +32,18 @@ public final class CacheKeys {
 
     public static String qaHot(String questionHash) {
         return QA_HOT + questionHash;
+    }
+
+    public static String qaSession(Long id) {
+        return QA_SESSION + id;
+    }
+
+    public static String contentUpload(String uploadId) {
+        return CONTENT_UPLOAD + uploadId;
+    }
+
+    public static String contentUploadChunks(String uploadId) {
+        return CONTENT_UPLOAD + uploadId + ":chunks";
     }
 
     public static String rateLimit(String service, String identity) {

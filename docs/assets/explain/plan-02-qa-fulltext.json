@@ -1,0 +1,40 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost_info": {
+      "query_cost": "0.35"
+    },
+    "table": {
+      "table_name": "qa_question",
+      "access_type": "fulltext",
+      "possible_keys": [
+        "idx_question"
+      ],
+      "key": "idx_question",
+      "used_key_parts": [
+        "question"
+      ],
+      "key_length": "0",
+      "ref": [
+        "const"
+      ],
+      "rows_examined_per_scan": 1,
+      "rows_produced_per_join": 0,
+      "filtered": "10.00",
+      "ft_hints": "no_ranking",
+      "cost_info": {
+        "read_cost": "0.25",
+        "eval_cost": "0.01",
+        "prefix_cost": "0.35",
+        "data_read_per_join": "227"
+      },
+      "used_columns": [
+        "id",
+        "question",
+        "synonyms",
+        "status"
+      ],
+      "attached_condition": "((`yingxin`.`qa_question`.`status` = 1) and (match `yingxin`.`qa_question`.`question`,`yingxin`.`qa_question`.`synonyms` against ('被子' in boolean mode)))"
+    }
+  }
+}

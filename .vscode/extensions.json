@@ -1,11 +1,14 @@
 {
-  "//": "团队推荐扩展：装上后编辑器才会读 .editorconfig，避免换行符/缩进不一致",
+  "//": "团队推荐扩展：装上后编辑器才会读 .editorconfig，避免换行符/缩进不一致；末尾三项用于 DBML 预览 / 连库查询 / SQL 格式化",
   "recommendations": [
     "EditorConfig.EditorConfig",
     "Vue.volar",
     "vscjava.vscode-java-pack",
     "vmware.vscode-spring-boot",
     "ms-azuretools.vscode-docker",
-    "jebbs.plantuml"
+    "jebbs.plantuml",
+    "dbdiagram.dbdiagram-vscode",
+    "cweijan.vscode-mysql-client2",
+    "ReneSaarsoo.sql-formatter-vsc"
   ]
 }

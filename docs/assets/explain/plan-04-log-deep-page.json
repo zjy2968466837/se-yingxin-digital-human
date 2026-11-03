@@ -1,0 +1,40 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost_info": {
+      "query_cost": "109258.75"
+    },
+    "ordering_operation": {
+      "using_filesort": true,
+      "cost_info": {
+        "sort_cost": "99100.00"
+      },
+      "table": {
+        "table_name": "qa_ask_log",
+        "access_type": "ALL",
+        "rows_examined_per_scan": 99100,
+        "rows_produced_per_join": 99100,
+        "filtered": "100.00",
+        "cost_info": {
+          "read_cost": "248.75",
+          "eval_cost": "9910.00",
+          "prefix_cost": "10158.75",
+          "data_read_per_join": "30M"
+        },
+        "used_columns": [
+          "id",
+          "user_id",
+          "question_hash",
+          "hit_type",
+          "cost_ms",
+          "session_id",
+          "create_time",
+          "update_time",
+          "create_by",
+          "update_by",
+          "deleted"
+        ]
+      }
+    }
+  }
+}

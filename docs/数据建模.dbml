@@ -20,7 +20,7 @@ Table auth_user {
   real_name            VARCHAR(32)      [note: '姓名（敏感，脱敏展示）']
   phone                VARCHAR(20)      [note: '手机号（加密存储）']
   id_card              VARCHAR(255)     [note: '身份证号（密文存储，仅实名核验与审计使用，禁止出接口与进日志）']
-  password_hash        VARCHAR(100)     [note: '仅管理员/特殊账号用；BCrypt']
+  password_hash        VARCHAR(100)     [not null, note: '全量账号必填；BCrypt 慢哈希（随机盐内置），禁止明文与可逆加密（文档 §8.2.1）']
   status               TINYINT          [not null, note: '1 正常 / 2 禁用 / 3 未激活']
   last_login_time      DATETIME(3)      [note: '最近登录时间']
   create_time          DATETIME(3)      [not null, note: '持久层自动填充，业务代码不得手写']

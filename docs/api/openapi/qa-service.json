@@ -1,0 +1,274 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "智能问答服务接口文档",
+    "description": "FR-3 智能问答：问答库、意图识别、多轮对话（S5 阶段仅有会话样板）",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8101",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "问答会话（S5 样板）",
+      "description": "Controller → Service → Mapper → MySQL + Redis 的最小闭环；不含问答检索等 FR-3 业务逻辑"
+    },
+    {
+      "name": "智能问答",
+      "description": "F11.2 连通性自检：验证服务启动、网关路由与统一响应体"
+    }
+  ],
+  "paths": {
+    "/api/qa/sessions": {
+      "post": {
+        "tags": [
+          "问答会话（S5 样板）"
+        ],
+        "summary": "创建会话",
+        "description": "写入 qa_session，雪花 ID 与审计字段由持久层自动填充",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QaSessionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultQaSessionVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/qa/sessions/{id}": {
+      "get": {
+        "tags": [
+          "问答会话（S5 样板）"
+        ],
+        "summary": "查询会话",
+        "description": "优先读 Redis 缓存，未命中回源 MySQL；不存在返回 2001",
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "会话 id（雪花 ID）",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 3300000000000000001
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultQaSessionVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "问答会话（S5 样板）"
+        ],
+        "summary": "删除会话",
+        "description": "逻辑删除：把 deleted 写成该行 id，并主动失效缓存",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "会话 id（雪花 ID）",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 3300000000000000001
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/qa/ping": {
+      "get": {
+        "tags": [
+          "智能问答"
+        ],
+        "summary": "连通性自检",
+        "description": "返回服务名、UP 状态与服务器时间",
+        "operationId": "ping",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultMapStringObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "QaSessionCreateRequest": {
+        "type": "object",
+        "description": "创建问答会话请求",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "学生用户 id（雪花 ID）",
+            "example": 1000123,
+            "minimum": 1
+          },
+          "channel": {
+            "type": "integer",
+            "format": "int32",
+            "default": 1,
+            "description": "来源渠道：1 学生端网页 / 2 管理后台",
+            "example": 1,
+            "maximum": 2,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "QaSessionVO": {
+        "type": "object",
+        "description": "问答会话",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "会话 id（雪花 ID）",
+            "example": 3300000000000000001
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "学生用户 id",
+            "example": 1000123
+          },
+          "channel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "来源渠道：1 学生端网页 / 2 管理后台",
+            "example": 1
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "会话开始时间",
+            "example": "2026-10-27 16:30:00"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "会话结束时间，未结束为 null"
+          },
+          "messageCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "消息条数",
+            "example": 0
+          },
+          "satisfied": {
+            "type": "integer",
+            "format": "int32",
+            "description": "满意度：0 未评价 / 1 满意 / 2 不满意",
+            "example": 0
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间（持久层自动填充）",
+            "example": "2026-10-27 16:30:00"
+          }
+        }
+      },
+      "ResultQaSessionVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/QaSessionVO"
+          }
+        }
+      },
+      "ResultMapStringObject": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      },
+      "ResultVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {}
+        }
+      }
+    }
+  }
+}

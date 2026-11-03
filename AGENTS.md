@@ -6,16 +6,21 @@
 
 仓库仍处于**骨架阶段**。以下基础设施**尚不存在**，不要假设可以直接调用：
 
-- 后端：每个服务只有 `XxxApplication` 启动类 + 一个 `PingController` 自检接口（已返回统一响应体）；
-  `auth-service` 已有登录/登出（F1.1 / F1.8）与 `AuthUser` 实体 + Mapper 作为分层样板。
-  横向能力由公共模块提供：统一响应体 / 错误码 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson 配置（`common-web` 自动装配，已有单元测试）。
-  **仍缺**：其余服务的 Service / Mapper / Entity 分层与业务代码（S5 纵向打样未做）、前端仍是静态页、业务单元测试。
+- 后端：每个服务都有 `XxxApplication` 启动类 + `PingController` 自检接口（已返回统一响应体）；
+  **S5 纵向样板已在 `qa-service` 落地**（`QaSession` Entity / Mapper / Service / Controller + Redis 缓存 + 单测），
+  其余服务仍只有启动类与 ping。`auth-service` 只有 JWT 签发/会话能力与开发夹具，**没有** `AuthUser` 实体或 MySQL 持久化代码。
+  横向能力由公共模块提供：统一响应体 / 错误码 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson / OpenAPI 元信息（`common-web`），
+  文件存储抽象（`common-file`：本地 / S3 兼容 / 阿里云 OSS）。
+  **仍缺**：其余服务的 Service / Mapper / Entity 分层与业务代码、前端仍是静态页、业务集成测试。
+- 文件能力（2026-10-27 落地）：`common-file` + `content-service` 的 `/api/content/files/**`（批量上传 / 分片上传与后台重组 /
+  下载 / 删除 / 批量临时地址）；存储后端由 `yx.file.provider=local|minio|oss` 选择，本地验收用 S3 兼容服务
+  （MinIO 社区版已归档；主选 SeaweedFS 4.51，rclone serve s3 保底；见 [docs/文件存储与分片上传方案.md](docs/文件存储与分片上传方案.md)）。
 - 鉴权：**已打通（S3）** —— `auth-service` 签发 JWT（HS256，负载只放 `userId`/`role`，会话 `jti→userId/role` 存 Redis，TTL 2h）；
   网关 `AuthGlobalFilter` 剥离入站 `X-User-*` 后校验签名与会话，再注入用户上下文；**登出即删会话键，旧令牌立即失效**。
   **本地联调入口是夹具、不是登录接口**：`POST http://localhost:8100/api/dev/token?userId=123&role=STUDENT`（签发）
   与 `DELETE http://localhost:8100/api/dev/session/{jti}`（等价登出）。默认关闭，需 `AUTH_FIXTURE_ENABLED=true` 启动 auth-service；
   该路径**不在网关白名单**，只能直连 8100；业务登录（F1.1）在业务阶段实现，实现后删除夹具。
-- 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_init.sql`（8 个文件，裁剪后 **24 张表**），本地库已按脚本建表。
+- 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_<说明>.sql`（**10 个文件** = 7 个 init + 3 个增量，合计 **24 张表**），2026-10-27 已在干净容器上按版本号顺序验证建表通过（24 表 / 0 外键 / 全 InnoDB）；2026-11-03 新增增量把 `auth_user.password_hash` 收紧为 `NOT NULL`（全量账号必填 BCrypt 散列，见 [docs/数据建模.md](docs/数据建模.md) §8.2.1）。
   Flyway 依赖尚未接入（父 pom 的 `db` profile 待补），当前手工执行脚本；`backend/init-sql/01-init.sql` 仍只执行 `CREATE DATABASE`。
 - 前端：`admin-web` 只有登录页与连通性自检页（`QaView.vue` 是空占位），没有列表/表单等 CRUD 范例可抄；
   `miniprogram` 只注册了首页与「我的」两个页面。
@@ -33,7 +38,12 @@
 - **数据设计看 [docs/数据建模.md](docs/数据建模.md)**：§2 表清单 / §3 字段定义 / §5 唯一键与状态机 /
   §6 无外键下的完整性对策；完整性规则编号 DI-1–DI-22 在需求分析文档 §7.2。
   模型文件 `docs/数据建模.dbml`（可导入 dbdiagram.io 出图与导出 DDL）**由文档生成，勿手改**；导出的 DDL 必须先删 `FOREIGN KEY`。
-- 文档已于 2026-10-09 整理合并：`docs/` 现为 7 份，索引见 [README.md](README.md)。
+- 文档已于 2026-10-09 整理合并，索引见 [README.md](README.md)；数据库物理层另见
+  [docs/MySQL存储引擎与执行计划.md](docs/MySQL存储引擎与执行计划.md)（引擎参数 / EXPLAIN / 计划可视化）与
+  [docs/数据表存储结构规划.md](docs/数据表存储结构规划.md)（逐表存储结构 / 容量 / 归档）；
+  文件能力见 [docs/文件存储与分片上传方案.md](docs/文件存储与分片上传方案.md)，接口文档索引见
+  [docs/api/接口文档索引.md](docs/api/接口文档索引.md)，禅道权限分析见
+  [docs/禅道角色权限与表结构分析.md](docs/禅道角色权限与表结构分析.md)。
 
 ## 工程阶段界碑（2026-10-09 定，勿模糊）
 
@@ -45,7 +55,7 @@
 | S2 `common-web`（全局异常/traceId/用户上下文/MP·Redis·Jackson 配置） | ✅ |
 | S3 网关统一鉴权（剥离伪造头 → 校验签名 → 校验会话 → 注入上下文） | ✅ |
 | S4 迁移脚本与 24 张表（本地库已建） | ✅ |
-| S5 单服务纵向打样（建议 qa-service） | ❌ 未做 |
+| S5 单服务纵向打样（qa-service：`qa_session` 写读删 + Redis + 单测） | ✅ |
 
 - **S5 的范围必须卡死**：只做「Controller → Service → Mapper → Redis 的最小闭环 + 单元测试」，
   **不实现 FR-3 的任何功能逻辑**（问答检索、意图识别、多轮对话都不做）——它的交付物是"可照抄的样板"，不是功能。
@@ -80,9 +90,10 @@ cd frontend/miniprogram && pnpm install && pnpm dev:h5          # 一期：学�
 
 ## 架构边界
 
-- 后端：**11 个模块** = 9 个服务 + `common-core` + `common-web`（公共模块已落地，见 [docs/开发规范.md](docs/开发规范.md) §1.3）；
-  包根 `com.sicnu.yingxin.<服务名>`，公共模块为 `com.sicnu.yingxin.common.core` / `com.sicnu.yingxin.common.web`。
-  **新服务必须引 `common-web`**（自动装配统一响应体 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson 配置）；网关只引 `common-core`。
+- 后端：**12 个模块** = 9 个服务 + `common-core` + `common-web` + `common-file`（公共模块已落地，见 [docs/开发规范.md](docs/开发规范.md) §1.3）；
+  包根 `com.sicnu.yingxin.<服务名>`，公共模块为 `com.sicnu.yingxin.common.core` / `common.web` / `common.file`。
+  **新服务必须引 `common-web`**（自动装配统一响应体 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson / OpenAPI 元信息）；
+  需要文件能力的服务再引 `common-file`；网关只引 `common-core`。
   端口：gateway `8080`、auth `8100`、qa `8101`、checkin `8102`、navigation `8103`、aid `8104`、life `8105`、content `8106`、admin `8107`。
 - 网关路由写在 `backend/services/gateway/src/main/resources/application.yml`，前缀 `/api/<服务>/**`，
   **转发不裁剪前缀**——直连 `8101` 与走网关 `8080` 的路径完全一致。CORS 也在这份 yml 里全局配置。

@@ -42,6 +42,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+yingxin:
+  api-doc:
+    title: 资助与绿色通道服务接口文档
+    description: FR-5 资助与绿色通道：政策匹配、在线申请与审核
+
 management:
   endpoints:
     web:

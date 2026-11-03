@@ -42,6 +42,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+yingxin:
+  api-doc:
+    title: 生活服务聚合服务接口文档
+    description: FR-6 生活服务聚合：服务信息与宿舍报修
+
 management:
   endpoints:
     web:
