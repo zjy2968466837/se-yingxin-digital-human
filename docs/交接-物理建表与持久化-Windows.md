@@ -4,6 +4,11 @@
 > （`QaSession` Entity/Mapper/Service/Controller + Redis 缓存 + 单测），建表已在干净容器验证（24 表 / 0 外键）。
 > 本文保留作为当时的核查快照与操作手册；最新状态以 [AGENTS.md](../AGENTS.md) 为准。
 >
+> **补记（2026-11-03）**：云库（CloudBase MySQL）已按本文顺序执行到第 **10** 个脚本并校验通过——
+> 24 表 / 0 外键 / 全 InnoDB / 表名全小写，三处增量均在位（`content_article.guide_type`+`contact`、
+> `admin_user_role.idx_role`、`auth_user.password_hash` 非空）。
+> `V20261103120001__auth_password_hash_not_null.sql` 原先漏在 §6.1 执行清单外，本次已补入。
+>
 > **用途**：把 2026-10-27 对“各组把自己的表建到物理库 + 能写持久化代码”的核查结论固化下来，供在 Windows 上继续执行。
 >
 > **适用仓库**：`se-yingxin-digital-human`
@@ -85,7 +90,7 @@
 - **Flyway 未接入**：`backend/pom.xml` 全文无 Flyway，也没有 `db` profile；各服务 pom 也没有 Flyway。
 - `backend/init-sql/01-init.sql:1` 只执行 `CREATE DATABASE IF NOT EXISTS yingxin ...`，不建表。
 - `backend/docker-compose.yml:32` 只把 `./init-sql` 挂到 MySQL 的 `/docker-entrypoint-initdb.d`，不会自动执行 `db/migration`。
-- 因此，**当前唯一可行方式是手工按版本号顺序执行 9 个脚本**。
+- 因此，**当前唯一可行方式是手工按版本号顺序执行 10 个脚本**（7 init + 3 增量）。
 - 由于没有 `flyway_schema_history`，无法判断某个脚本是否执行过；重复执行 `CREATE TABLE` 会报 “Table already exists”。
 
 ### 2.4 持久化代码现状
@@ -265,6 +270,7 @@ docker compose up -d
 7. `V20261009160007__qa_init.sql`
 8. `V20261025134001__content_add_guide_columns.sql`
 9. `V20261025134002__admin_add_idx_role.sql`
+10. `V20261103120001__auth_password_hash_not_null.sql`
 
 ### 6.2 Windows 执行命令
 
@@ -339,7 +345,7 @@ PowerShell 下仍要注意 `<` 的问题，用 `cmd /c` 包一层。
 
 - 只做本组：执行对应服务的 `*_init.sql` 即可（无外键，互不依赖）。
 - 但建议至少把 `auth_*` 也建上：多数业务表逻辑引用 `user_id`，联调时要用。
-- 如果做完整演示：9 个脚本全执行。
+- 如果做完整演示：10 个脚本全执行（含 2026-11-03 的口令非空增量）。
 
 ### 6.4 校验
 
@@ -656,7 +662,7 @@ class QaSessionServiceTest {
 ### 8.2 “工具是否集成”的准确回答
 
 - **工具本身**：dbdiagram.io 是网页 SaaS，没有、也不需要“集成”进仓库或 CI。
-- **产物与流程**：已集成。仓库有 `.dbml` 源、拆图脚本、4 份 ER 视图、4 张 ER 图、9 个迁移脚本。
+- **产物与流程**：已集成。仓库有 `.dbml` 源、拆图脚本、4 份 ER 视图、4 张 ER 图、10 个迁移脚本。
 - **证据链**：缺 dbdiagram 导出的原始 DDL 和一张有效截图。建议补：
   - `docs/assets/db/dbdiagram-24-tables.png`（24 张表的完整截图）
   - `docs/assets/db/dbdiagram-export.sql`（原始导出，文件头注明“仅存档，未删外键；权威 DDL 以迁移脚本为准”）
@@ -714,7 +720,7 @@ class QaSessionServiceTest {
 | `docs/需求分析文档.md` §8.4 | 24 表裁剪口径；单人阶段允许 init-sql + down -v |
 | `docs/环境搭建指南.md` | JDK/Node/Docker/前后端启动 |
 | `backend/docker-compose.yml` | MySQL 8.0.46 + Redis 7.0.15 本地编排 |
-| `backend/db/migration/` | 9 个迁移脚本（7 init + 2 增量） |
+| `backend/db/migration/` | 10 个迁移脚本（7 init + 3 增量） |
 | `AGENTS.md` | 工程阶段界碑、夹具、架构边界 |
 
 ---
