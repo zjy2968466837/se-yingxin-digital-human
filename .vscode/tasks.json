@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "verify: 登录数据链路",
+      "detail": "验证码 → Redis → 登录 → HttpOnly Cookie → /me → 授权 403 → 登出 401",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/verify-auth-chain.sh"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "db: Flyway 状态",
+      "detail": "读取 MYSQL_* 环境变量，执行 flyway:info",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/db-migrate.sh", "info"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "db: Flyway 迁移",
+      "detail": "执行未应用的迁移脚本",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/db-migrate.sh", "migrate"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    }
+  ]
+}
