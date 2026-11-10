@@ -48,6 +48,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/*/ping",
             "/api/auth/login/**",
             "/api/auth/wechat/**",
+            "/api/admin/auth/**",
             "/api/public/**");
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();

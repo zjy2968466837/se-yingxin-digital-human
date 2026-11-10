@@ -103,6 +103,25 @@ class AuthGlobalFilterTest {
     }
 
     @Test
+    @DisplayName("管理后台登录/验证码免鉴权（FR-9.1），其余 /api/admin/** 仍需令牌")
+    void adminAuthWhitelisted() {
+        MockServerWebExchange captcha = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/admin/auth/captcha").build());
+        filter.filter(captcha, chain).block();
+        assertThat(forwarded.get()).isNotNull();
+
+        MockServerWebExchange login = MockServerWebExchange.from(
+                MockServerHttpRequest.post("/api/admin/auth/login").build());
+        filter.filter(login, chain).block();
+        assertThat(forwarded.get()).isNotNull();
+
+        MockServerWebExchange protectedApi = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/admin/users").build());
+        filter.filter(protectedApi, chain).block();
+        assertThat(protectedApi.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
     @DisplayName("有效令牌 + 会话存在：放行并注入 X-User-Id / X-User-Role")
     void validTokenInjectsUserHeaders() {
         when(redis.hasKey(anyString())).thenReturn(Mono.just(Boolean.TRUE));

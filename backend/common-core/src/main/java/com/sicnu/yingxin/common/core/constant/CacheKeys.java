@@ -23,6 +23,12 @@ public final class CacheKeys {
     /** 分片上传会话：yx:content:upload:{uploadId}；已收分片序号在这个 key 后加 :chunks */
     public static final String CONTENT_UPLOAD = PREFIX + "content:upload:";
 
+    /** 管理后台图形验证码：yx:admin:captcha:{captchaId}，一次性，TTL 5 分钟 */
+    public static final String ADMIN_CAPTCHA = PREFIX + "admin:captcha:";
+
+    /** 管理后台登录失败计数：yx:admin:login:fail:{username}，固定窗口 TTL */
+    public static final String ADMIN_LOGIN_FAIL = PREFIX + "admin:login:fail:";
+
     /** 限流计数：yx:<服务>:rate:{标识}，固定短 TTL */
     public static final String RATE_LIMIT = "%s:rate:%s";
 
@@ -44,6 +50,14 @@ public final class CacheKeys {
 
     public static String contentUploadChunks(String uploadId) {
         return CONTENT_UPLOAD + uploadId + ":chunks";
+    }
+
+    public static String adminCaptcha(String captchaId) {
+        return ADMIN_CAPTCHA + captchaId;
+    }
+
+    public static String adminLoginFail(String username) {
+        return ADMIN_LOGIN_FAIL + username;
     }
 
     public static String rateLimit(String service, String identity) {
