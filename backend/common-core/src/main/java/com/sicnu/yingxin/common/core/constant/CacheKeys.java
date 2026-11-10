@@ -1,0 +1,69 @@
+package com.sicnu.yingxin.common.core.constant;
+
+/**
+ * 缓存 key 口径（开发规范 §5.4）：统一 {@code yx:<服务>:<业务>:<标识>}，全小写、禁止空格与中文。
+ *
+ * <p>三条硬约束：① 值一律 JSON 序列化（禁用 JDK 序列化）；② **key 必须设 TTL**，禁止永久键；
+ * ③ 数据变更由写入方主动失效，缓存不得作为唯一数据源。
+ */
+public final class CacheKeys {
+
+    /** 全局前缀 */
+    public static final String PREFIX = "yx:";
+
+    /** 会话：yx:auth:session:{tokenId}，TTL 与令牌一致（令牌失效即删） */
+    public static final String AUTH_SESSION = PREFIX + "auth:session:";
+
+    /** 问答热点头：yx:qa:hot:{questionHash}，命中即回，内容发布时失效 */
+    public static final String QA_HOT = PREFIX + "qa:hot:";
+
+    /** 会话详情：yx:qa:session:{id}，读多写少，删除/更新时主动失效 */
+    public static final String QA_SESSION = PREFIX + "qa:session:";
+
+    /** 分片上传会话：yx:content:upload:{uploadId}；已收分片序号在这个 key 后加 :chunks */
+    public static final String CONTENT_UPLOAD = PREFIX + "content:upload:";
+
+    /** 管理后台图形验证码：yx:admin:captcha:{captchaId}，一次性，TTL 5 分钟 */
+    public static final String ADMIN_CAPTCHA = PREFIX + "admin:captcha:";
+
+    /** 管理后台登录失败计数：yx:admin:login:fail:{username}，固定窗口 TTL */
+    public static final String ADMIN_LOGIN_FAIL = PREFIX + "admin:login:fail:";
+
+    /** 限流计数：yx:<服务>:rate:{标识}，固定短 TTL */
+    public static final String RATE_LIMIT = "%s:rate:%s";
+
+    public static String authSession(String tokenId) {
+        return AUTH_SESSION + tokenId;
+    }
+
+    public static String qaHot(String questionHash) {
+        return QA_HOT + questionHash;
+    }
+
+    public static String qaSession(Long id) {
+        return QA_SESSION + id;
+    }
+
+    public static String contentUpload(String uploadId) {
+        return CONTENT_UPLOAD + uploadId;
+    }
+
+    public static String contentUploadChunks(String uploadId) {
+        return CONTENT_UPLOAD + uploadId + ":chunks";
+    }
+
+    public static String adminCaptcha(String captchaId) {
+        return ADMIN_CAPTCHA + captchaId;
+    }
+
+    public static String adminLoginFail(String username) {
+        return ADMIN_LOGIN_FAIL + username;
+    }
+
+    public static String rateLimit(String service, String identity) {
+        return String.format(RATE_LIMIT, PREFIX + service, identity);
+    }
+
+    private CacheKeys() {
+    }
+}

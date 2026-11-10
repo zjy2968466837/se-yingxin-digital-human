@@ -3,7 +3,7 @@
 ## 环境准备
 
 从零搭建开发环境（JDK / Node / pnpm / Docker 的版本要求与安装步骤）见
-[环境搭建指南](docs/环境搭建指南.md)，环境一致性约定见 [开发环境版本](docs/开发环境版本.md)。
+[环境搭建指南](docs/环境搭建指南.md)，环境一致性约定见 [开发规范](docs/开发规范.md) §10。
 
 ```bash
 git clone https://github.com/zjy2968466837/se-yingxin-digital-human.git

@@ -6,7 +6,7 @@ spring:
     name: auth-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（见 docs/部署指南.md）
+    # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（部署编排见 backend/docker-compose.prod.yml）
     # 云端 Azure MySQL 强制 SSL，需设 MYSQL_SSL_MODE=REQUIRED
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:yingxin}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&sslMode=${MYSQL_SSL_MODE:PREFERRED}
     username: ${MYSQL_USER:yingxin}
@@ -31,6 +31,21 @@ spring:
   jackson:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss
+
+# 认证参数（开发规范 §4.1）：密钥必须由环境变量注入，本地默认值仅供开发
+yingxin:
+  auth:
+    jwt-secret: ${JWT_SECRET:yingxin-local-dev-jwt-secret-change-me-32bytes}
+    access-token-ttl: 2h
+    # 脚手架验证夹具（不是业务功能）：开启后暴露 POST /api/dev/token、DELETE /api/dev/session/{jti}
+    # 仅本地联调用 `AUTH_FIXTURE_ENABLED=true` 开启；**上云前必须为 false**
+    fixture:
+      enabled: ${AUTH_FIXTURE_ENABLED:false}
+    # 服务间内部接口凭证（admin-service → 本服务签发令牌）：必须与 admin-service 的 AUTH_INTERNAL_SECRET 一致
+    internal-secret: ${AUTH_INTERNAL_SECRET:yingxin-local-dev-internal-secret-change-me}
+  api-doc:
+    title: 身份核验与个性化迎新服务接口文档
+    description: FR-1 身份核验：学号密码登录、微信登录与会话管理
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml

@@ -1,4 +1,4 @@
-# 本地开发基础设施：MySQL 8.0 + Redis 7.0
+# 本地开发基础设施：MySQL 8.0 + Redis 7.0 + S3 兼容对象存储
 #
 # 镜像版本刻意与云端保持一致（2026-09 实测）：
 #   - 云端 MySQL：Azure Database for MySQL Flexible Server，SELECT VERSION() = 8.0.46-azure
@@ -52,6 +52,31 @@ services:
       timeout: 3s
       retries: 10
 
+  # 本地 S3 兼容对象存储（rclone 保底）。
+  # 课程/报告主选 SeaweedFS 4.51：Windows 单文件 weed.exe + Filer UI（8888），
+  #   与 rclone 同走 S3 协议，common-file 的 MinioFileStorage 零代码改动，
+  #   启动命令见 docs/文件存储与分片上传方案.md §8。
+  # 为什么不是 MinIO：MinIO 社区版已于 2025 年归档，官网二进制与镜像不再分发（实测 410 Gone）。
+  # 本 compose 保留 rclone serve s3 作为离线保底（单镜像、启动简单）；
+  # 云端改用阿里云 OSS 时只改 FILE_PROVIDER=oss，不动业务代码。
+  s3:
+    image: rclone/rclone:1.75.2
+    container_name: yingxin-s3
+    restart: unless-stopped
+    command:
+      - serve
+      - s3
+      - :local:/data
+      - --addr
+      - 0.0.0.0:9000
+      - --auth-key
+      - minioadmin,minioadmin
+    ports:
+      - "9000:9000"
+    volumes:
+      - s3-data:/data
+
 volumes:
   mysql-data:
   redis-data:
+  s3-data:

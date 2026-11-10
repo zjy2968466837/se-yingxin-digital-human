@@ -24,4 +24,4 @@ src/main/resources/
 
 数据库表统一建在 `yingxin` 库（按服务分表），Redis 用于缓存。
 
-约定与版本基线见 [../README.md](../README.md)，部署见 [../../docs/部署指南.md](../../docs/部署指南.md)。
+约定与版本基线见 [../README.md](../README.md)，云上部署编排见 [../../docker-compose.prod.yml](../../docker-compose.prod.yml)。

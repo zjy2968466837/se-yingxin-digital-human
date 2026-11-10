@@ -16,6 +16,11 @@
   <description>API 网关：统一入口、路由转发、跨域</description>
 
   <dependencies>
+    <!-- 网关只引 common-core：用于 401/403 的统一响应体（WebFlux 不能引 common-web） -->
+    <dependency>
+      <groupId>com.sicnu.yingxin</groupId>
+      <artifactId>common-core</artifactId>
+    </dependency>
     <!-- 注意：网关基于 WebFlux，不能引入 spring-boot-starter-web，否则启动冲突 -->
     <dependency>
       <groupId>org.springframework.cloud</groupId>
@@ -28,6 +33,27 @@
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+    </dependency>
+
+    <!-- 令牌校验（H-04）：网关只校验签名与会话，不签发 -->
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- 会话校验走响应式 Redis（登出即失效，F1.8） -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
     </dependency>
   </dependencies>
 </project>

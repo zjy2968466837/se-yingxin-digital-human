@@ -40,6 +40,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# AI 编码工具的工作目录（导出中间产物，不入库）
+.codebuddy/
+
 # 敏感配置（API Key、数据库密码等）
 application-local.yml
 application-prod.yml
@@ -50,3 +53,11 @@ application-prod.yml
 
 # 前端默认配置不含密码，需要入库（上面的 .env.* 会误伤）
 !frontend/*/.env.development
+
+# 本地数据库凭据，只在本机用，禁止入库
+docs/本地数据库-勿上传.md
+
+# 代理/编辑器工具状态，不入库
+.zcode/
+.vscode/*.code-profile
+skills-lock.json

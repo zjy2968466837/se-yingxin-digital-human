@@ -1,0 +1,89 @@
+// ============================================================
+// 自动生成，请勿手改 —— 源：docs/数据建模.dbml（表）+ docs/数据建模.md §4.1（关系）
+// 生成脚本：scripts/split_dbml.py
+// 用途：仅用于出图（图4-4 ER-5 内容服务与管理后台（content + admin））
+// 字段：出图用关键字段（每表 3–5 列），全字段明细见《数据库设计说明书》4.2
+// 注意：不要从本文件导出 DDL；DDL 只从 docs/数据建模.dbml 全量导出
+// 说明：RBAC 由 admin_user_role 关联；埋点事件按 user_id 逻辑关联，无物理外键。
+// ============================================================
+
+Table content_article {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  module               TINYINT          [not null, note: '1 安全教育 / 2 入学教育 / 3 校规校纪 / 4 军训安排 / 5 招新信息']
+  title                VARCHAR(128)     [not null, note: '标题']
+  poi_code             VARCHAR(32)      [note: '关联地点（引用 poi.json 的 poi_code，招新/军训地点，可跳导航）']
+  status               TINYINT          [not null, note: '1 草稿 / 2 已发布 / 3 已下线']
+  Note: '内容条目'
+}
+
+Table admin_user {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  username             VARCHAR(32)      [not null, note: '登录名，唯一']
+  dept                 TINYINT          [not null, note: '1 学工 / 2 后勤 / 3 保卫 / 4 学院 / 5 信息中心（ACT-4）']
+  status               TINYINT          [not null, note: '1 正常 / 2 禁用']
+  Note: '管理员'
+}
+
+Table admin_role {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  role_code            VARCHAR(32)      [not null, note: '角色编码，唯一，权限判定以此为准']
+  role_name            VARCHAR(64)      [not null, note: '角色名称']
+  status               TINYINT          [not null, note: '1 启用 / 2 停用']
+  Note: '角色'
+}
+
+Table admin_user_role {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  admin_user_id        BIGINT           [not null, note: '管理员']
+  role_id              BIGINT           [not null, note: '角色']
+  Note: '管理员角色关联'
+}
+
+Table admin_behavior_event {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  event_type           TINYINT          [not null, note: '1 问答 / 2 导航 / 3 报到打卡 / 4 内容阅读 / 5 页面访问']
+  user_id              BIGINT           [note: '匿名可空']
+  service              VARCHAR(32)      [note: '来源服务与业务对象']
+  event_time           DATETIME(3)      [not null, note: '事件发生时间（不用 create_time 代替，允许延迟上报）']
+  Note: '埋点事件'
+}
+
+Table admin_announcement {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  title                VARCHAR(128)     [not null, note: '标题与正文']
+  publish_time         DATETIME(3)      [note: '定时发布与撤回（F9.5）']
+  status               TINYINT          [not null, note: '1 草稿 / 2 已发布 / 3 已撤回']
+  publisher_id         BIGINT           [not null, note: '发布人']
+  Note: '公告'
+}
+
+Table admin_operation_log {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  admin_user_id        BIGINT           [not null, note: '操作人']
+  module               VARCHAR(32)      [not null, note: '模块与动作（如 qa_question / publish）']
+  action               VARCHAR(32)      [not null, note: '模块与动作（如 qa_question / publish）']
+  result               TINYINT          [not null, note: '1 成功 / 2 失败']
+  Note: '操作日志'
+}
+
+Table auth_user {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  student_no           VARCHAR(32)      [note: '学号，与 openid 至少一个非空']
+  openid               VARCHAR(64)      [note: '微信 openid，唯一']
+  status               TINYINT          [not null, note: '1 正常 / 2 禁用 / 3 未激活']
+  Note: '用户账号'
+}
+
+// ---- 关系（取自《数据建模》§4.1）----
+// 1 : N
+Ref: admin_user.id > admin_user_role.admin_user_id
+// 1 : N
+Ref: admin_role.id > admin_user_role.role_id
+// 1 : N 发布
+Ref: admin_user.id > admin_announcement.publisher_id
+// 1 : N 操作留痕
+Ref: admin_user.id > admin_operation_log.admin_user_id
+// 0..1 : N 埋点（可匿名）
+Ref: auth_user.id > admin_behavior_event.user_id
+
+// 注意：§4.1 中以下关系引用的表已被裁剪，本视图不画：content_article->content_club

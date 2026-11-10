@@ -16,6 +16,11 @@
   <description>统一身份认证、人脸轻核验、会话</description>
 
   <dependencies>
+    <!-- 统一形态由公共模块提供：统一响应体、全局异常、traceId、用户上下文、MP/Redis/Jackson 配置 -->
+    <dependency>
+      <groupId>com.sicnu.yingxin</groupId>
+      <artifactId>common-web</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -52,6 +57,22 @@
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    </dependency>
+
+    <!-- 令牌签发（H-04）：仅本服务签发，网关只校验 -->
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 </project>
