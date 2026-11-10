@@ -20,10 +20,10 @@
 ## 0. 先看这里（TL;DR）
 
 1. **模型与建表 SQL 已齐**：`docs/数据建模.dbml` 有 24 个 `Table`；`backend/db/migration/` 有 7 个 init 脚本（合计 24 张表）+ 3 个增量脚本，全部无物理外键。
-2. **物理建表目前只能手工执行**：Flyway 未接入，`backend/init-sql/01-init.sql` 只建库；没有迁移执行入口脚本。
+2. **物理建表已可走 Flyway（2026-11-10 接入）**：`./mvnw -Pdb -pl . flyway:migrate` 或 `scripts/db-migrate.sh migrate`；`backend/init-sql/01-init.sql` 仍只建库。已有库先按 §2.3 基线化。
 3. **持久化基础设施齐、样板为零**：`common-web` 已自动装配 MyBatis-Plus、审计字段填充、Redis、Jackson；但所有服务都没有 Entity/Mapper/Service，`AuthUser` 样板已在 commit `5419405` 删除。
 4. **dbdiagram.io 是网页端 SaaS**：不存在“装进仓库/CI”的集成，也不需要；仓库集成的是它的产物（`.dbml`、拆图脚本、ER 图、迁移脚本）。如果课程要求“工具直接连库正向工程建表”，dbdiagram 只能导出 DDL，需要换 Navicat / PowerDesigner / MySQL Workbench。
-5. **Windows 上先做三件事**：起 MySQL/Redis 容器 → 按顺序执行 10 个 SQL 脚本 → 校验 24 张表（含 3 个增量）。然后按第 7 节写 `qa_session` 的最小持久化闭环。
+5. **Windows 上先做三件事**：起 MySQL/Redis → `./mvnw -Pdb -pl . flyway:migrate`（已有库先基线化）→ 校验 24 张业务表（+ `flyway_schema_history`）。然后按第 7 节看 `qa_session` 的持久化闭环。
 
 ---
 
@@ -47,7 +47,7 @@
 - 禁止物理外键，关联由应用层保证（`docs/开发规范.md:266`）。
 - 主键统一雪花 ID，非自增；`deleted` 为 `BIGINT`，`0` 表示未删除，删除时写本行 `id`（`docs/开发规范.md:273-276`）。
 - 地图数据（POI / 路网）是静态 JSON，**不建表**（`docs/数据建模.md:1017`）。
-- 单人/课程阶段允许先用 init-sql 编号脚本 + `docker compose down -v` 重建，多人并行后再上 Flyway（`docs/需求分析文档.md:1019`）。
+- 单人/课程阶段允许先用 init-sql 编号脚本 + `docker compose down -v` 重建；**多人并行由 Flyway 保证结构一致（2026-11-10 已接入，见 §2.3）**（`docs/需求分析文档.md:1019`）。
 
 ---
 
@@ -87,10 +87,22 @@
 
 ### 2.3 迁移执行机制
 
-- **Flyway 未接入**：`backend/pom.xml` 全文无 Flyway，也没有 `db` profile；各服务 pom 也没有 Flyway。
+- **Flyway 已接入（2026-11-10）**：父 pom 的 `db` profile 提供 `flyway-maven-plugin`（11.7.2），
+  连接参数从 `MYSQL_*` 环境变量读取；`-pl .` 只在聚合工程执行一次，子模块不引 Flyway、不自动迁移。
+  ```bash
+  ./mvnw -Pdb -pl . flyway:info       # 当前版本 / 待执行脚本
+  ./mvnw -Pdb -pl . flyway:migrate    # 执行增量
+  scripts/db-migrate.sh migrate       # 等价封装（会先检查 MYSQL_* 是否齐全）
+  ```
+- **云库已基线化**：`flyway_schema_history` 有 1 行 baseline，版本 `20261103120001`（= 当时手工执行的最高版本），
+  `flyway:migrate` 显示 `up to date`。库内表数因此是 **25**（24 张业务表 + 历史表），历史表不算业务表。
+- 已有库首次接入必须先基线化，否则会从 `V20261009160001` 重跑并撞 “Table already exists”：
+  ```bash
+  ./mvnw -Pdb -pl . flyway:baseline -Dflyway.baselineVersion=<已手工执行的最高版本>
+  ```
 - `backend/init-sql/01-init.sql:1` 只执行 `CREATE DATABASE IF NOT EXISTS yingxin ...`，不建表。
 - `backend/docker-compose.yml:32` 只把 `./init-sql` 挂到 MySQL 的 `/docker-entrypoint-initdb.d`，不会自动执行 `db/migration`。
-- 因此，**当前唯一可行方式是手工按版本号顺序执行 10 个脚本**（7 init + 3 增量）。
+- 已应用的脚本**不得改内容**（checksum 校验会拦），结构变更一律新增 `V2026...` 脚本。
 - 由于没有 `flyway_schema_history`，无法判断某个脚本是否执行过；重复执行 `CREATE TABLE` 会报 “Table already exists”。
 
 ### 2.4 持久化代码现状
@@ -371,7 +383,7 @@ docker exec -i yingxin-mysql mysql -uyingxin -pyingxin123 yingxin -e "SHOW COLUM
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
-| `Table 'xxx' already exists` | 脚本已执行过；没有 Flyway 历史表，无法自动判断 | 先按 6.4 校验；已齐全就跳过；不确定就开发库 `down -v` 重建 |
+| `Table 'xxx' already exists` | 该脚本是绕过 Flyway 手工执行的，历史表里没有记录 | 先按 6.4 校验已齐全则跳过；长期做法是按 §2.3 基线化，之后只走 `flyway:migrate` |
 | `Unknown database 'yingxin'` | 库没建 | `docker compose up -d` 会自动建；或手工 `CREATE DATABASE yingxin ...` |
 | `Access denied` | 账号/密码不对 | 本地是 `yingxin/yingxin123`；root 是 `root123` |
 | `Duplicate key name 'idx_role'` | 增量脚本重复执行 | 说明已生效，跳过 |
@@ -680,7 +692,7 @@ class QaSessionServiceTest {
 
 | 项 | 现状 | 建议 |
 |---|---|---|
-| Flyway | 未接入；父 pom 无 Flyway、无 `db` profile | 课程阶段可先手工执行；规范化时再补 `db` profile + `flyway-maven-plugin`，业务服务不引 Flyway |
+| Flyway | **已接入（2026-11-10）**：父 pom `db` profile + `scripts/db-migrate.sh` | 用 `./mvnw -Pdb -pl . flyway:migrate`；已有库先基线化；业务服务仍不引 Flyway |
 | 迁移执行入口 | 没有脚本/README 命令 | 可加 `scripts/db-migrate.ps1`（Windows）或按本文第 6 节执行 |
 | 三个增量脚本 | 2026-10-25 两个 + 2026-11-03 一个（口令非空），容易漏 | 按 6.4 校验 `guide_type` / `idx_role` / `password_hash` 非空 |
 | 持久化样板 | 0 个 Entity/Mapper/Service | 按第 7 节补 `qa_session` |
@@ -725,4 +737,4 @@ class QaSessionServiceTest {
 
 ---
 
-**文档状态**：2026-10-27 依据当前分支整理；如后续补了 Flyway、迁移入口或持久化样板，请同步更新第 2、7、9 节。
+**文档状态**：2026-10-27 依据当时分支整理，2026-11-10 补记 Flyway 接入与云库基线化；如后续补了持久化样板，请同步更新第 7、9 节。

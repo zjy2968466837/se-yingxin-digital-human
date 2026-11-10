@@ -21,7 +21,9 @@
   与 `DELETE http://localhost:8100/api/dev/session/{jti}`（等价登出）。默认关闭，需 `AUTH_FIXTURE_ENABLED=true` 启动 auth-service；
   该路径**不在网关白名单**，只能直连 8100；业务登录（F1.1）在业务阶段实现，实现后删除夹具。
 - 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_<说明>.sql`（**10 个文件** = 7 个 init + 3 个增量，合计 **24 张表**），2026-10-27 已在干净容器上按版本号顺序验证建表通过（24 表 / 0 外键 / 全 InnoDB）；2026-11-03 新增增量把 `auth_user.password_hash` 收紧为 `NOT NULL`（全量账号必填 BCrypt 散列，见 [docs/数据建模.md](docs/数据建模.md) §8.2.1）。
-  Flyway 依赖尚未接入（父 pom 的 `db` profile 待补），当前手工执行脚本；`backend/init-sql/01-init.sql` 仍只执行 `CREATE DATABASE`。
+  Flyway 已接入（父 pom `db` profile + `scripts/db-migrate.sh`，`-pl .` 只在聚合工程执行）；云库已基线化到 `20261103120001`，
+  库里多出 `flyway_schema_history`（1 行 baseline，**不计入 24 张业务表**）；此后结构变更一律 `./mvnw -Pdb -pl . flyway:migrate`。
+  `backend/init-sql/01-init.sql` 仍只执行 `CREATE DATABASE`。
 - 前端：`admin-web` 只有登录页与连通性自检页（`QaView.vue` 是空占位），没有列表/表单等 CRUD 范例可抄；
   `miniprogram` 只注册了首页与「我的」两个页面。
 

@@ -143,4 +143,56 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!--
+      集中式数据库迁移（开发规范 §5.3）：脚本只放 backend/db/migration/，业务服务不引 Flyway、不自动迁移。
+      用法（连接信息一律从环境变量注入，禁止写进仓库）：
+        export MYSQL_HOST=... MYSQL_PORT=... MYSQL_DB=... MYSQL_USER=... MYSQL_PASSWORD=...
+        cd backend
+        ./mvnw -Pdb flyway:info
+        ./mvnw -Pdb flyway:migrate
+      已有库首次接入先基线化（版本号 = 已手工执行的最高版本）：
+        ./mvnw -Pdb flyway:baseline -Dflyway.baselineVersion=20261103120001
+    -->
+    <profile>
+      <id>db</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-maven-plugin</artifactId>
+            <version>${flyway.version}</version>
+            <!-- 只在聚合工程（backend/）执行一次；否则 12 个模块会各连一次库 -->
+            <inherited>false</inherited>
+            <configuration>
+              <locations>
+                <location>filesystem:${maven.multiModuleProjectDirectory}/db/migration</location>
+              </locations>
+              <encoding>UTF-8</encoding>
+              <url>jdbc:mysql://${env.MYSQL_HOST}:${env.MYSQL_PORT}/${env.MYSQL_DB}?useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&amp;sslMode=PREFERRED</url>
+              <user>${env.MYSQL_USER}</user>
+              <password>${env.MYSQL_PASSWORD}</password>
+              <!-- 已有结构的库首次 migrate 时自动基线化，避免在 24 张表上重跑 init 脚本 -->
+              <baselineOnMigrate>true</baselineOnMigrate>
+              <baselineVersion>20261103120001</baselineVersion>
+            </configuration>
+            <dependencies>
+              <!-- Flyway 10+ 数据库支持按模块拆包，MySQL 必须显式带 flyway-mysql -->
+              <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-mysql</artifactId>
+                <version>${flyway.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
