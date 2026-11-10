@@ -53,7 +53,8 @@ spring:
           globalcors:
             cors-configurations:
               '[/**]':
-                allowedOriginPatterns: "*"
+                # Cookie 会话必须配合具体 Origin（allowCredentials=true 时不允许 "*"，否则等于对任意站点开放）
+                allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
                 allowedMethods: "*"
                 allowedHeaders: "*"
                 allowCredentials: true

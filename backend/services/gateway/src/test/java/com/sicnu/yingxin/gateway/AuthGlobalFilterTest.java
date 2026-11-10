@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.core.ReactiveValueOperations;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -41,6 +43,7 @@ class AuthGlobalFilterTest {
     private AuthProperties properties;
     private JwtVerifier verifier;
     private ReactiveStringRedisTemplate redis;
+    private ReactiveValueOperations<String, String> valueOps;
     private AuthGlobalFilter filter;
 
     private final AtomicReference<ServerWebExchange> forwarded = new AtomicReference<>();
@@ -55,6 +58,7 @@ class AuthGlobalFilterTest {
         properties.setJwtSecret(SECRET);
         verifier = new JwtVerifier(properties);
         redis = Mockito.mock(ReactiveStringRedisTemplate.class);
+        valueOps = Mockito.mock(ReactiveValueOperations.class);
         filter = new AuthGlobalFilter(properties, verifier, redis, new ObjectMapper());
         forwarded.set(null);
     }
@@ -119,6 +123,69 @@ class AuthGlobalFilterTest {
                 MockServerHttpRequest.get("/api/admin/users").build());
         filter.filter(protectedApi, chain).block();
         assertThat(protectedApi.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("Session Cookie 有效：查 Redis 会话并注入 X-User-Id / X-User-Role")
+    void cookieSessionInjectsUserHeaders() {
+        when(redis.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get(anyString())).thenReturn(Mono.just("{\"userId\":42,\"role\":\"ADMIN\"}"));
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/admin/users")
+                        .cookie(new HttpCookie(HeaderNames.COOKIE_SESSION, "opaque-session-id"))
+                        .build());
+
+        filter.filter(exchange, chain).block();
+
+        ServerHttpRequest request = forwarded.get().getRequest();
+        assertThat(request.getHeaders().getFirst(HeaderNames.USER_ID)).isEqualTo("42");
+        assertThat(request.getHeaders().getFirst(HeaderNames.USER_ROLE)).isEqualTo("ADMIN");
+    }
+
+    @Test
+    @DisplayName("Cookie 指向不存在的会话（已登出）：401 + code 1002")
+    void cookieSessionRevokedRejected() {
+        when(redis.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get(anyString())).thenReturn(Mono.empty());
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/admin/users")
+                        .cookie(new HttpCookie(HeaderNames.COOKIE_SESSION, "gone"))
+                        .build());
+
+        filter.filter(exchange, chain).block();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(body(exchange)).contains("\"code\":1002");
+        assertThat(forwarded.get()).isNull();
+    }
+
+    @Test
+    @DisplayName("认证通过但角色不是 ADMIN：访问 /api/admin/** 返回 403 + code 1005")
+    void nonAdminBlockedFromAdminApi() {
+        when(redis.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get(anyString())).thenReturn(Mono.just("{\"userId\":7,\"role\":\"STUDENT\"}"));
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/admin/users")
+                        .cookie(new HttpCookie(HeaderNames.COOKIE_SESSION, "student-session"))
+                        .build());
+
+        filter.filter(exchange, chain).block();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(body(exchange)).contains("\"code\":1005");
+        assertThat(forwarded.get()).isNull();
+    }
+
+    @Test
+    @DisplayName("/api/admin/auth/me 不在白名单：无 Cookie 时 401")
+    void adminMeRequiresSession() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/admin/auth/me").build());
+
+        filter.filter(exchange, chain).block();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(forwarded.get()).isNull();
     }
 
     @Test

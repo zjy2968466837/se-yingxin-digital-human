@@ -16,11 +16,14 @@
 - 文件能力（2026-10-27 落地）：`common-file` + `content-service` 的 `/api/content/files/**`（批量上传 / 分片上传与后台重组 /
   下载 / 删除 / 批量临时地址）；存储后端由 `yx.file.provider=local|minio|oss` 选择，本地验收用 S3 兼容服务
   （MinIO 社区版已归档；主选 SeaweedFS 4.51，rclone serve s3 保底；见 [docs/文件存储与分片上传方案.md](docs/文件存储与分片上传方案.md)）。
-- 鉴权：**已打通（S3）** —— `auth-service` 签发 JWT（HS256，负载只放 `userId`/`role`，会话 `jti→userId/role` 存 Redis，TTL 2h）；
-  网关 `AuthGlobalFilter` 剥离入站 `X-User-*` 后校验签名与会话，再注入用户上下文；**登出即删会话键，旧令牌立即失效**。
-  管理员登录（F9.1，2026-11-10）：`admin-service` 的 `/api/admin/auth/captcha` + `/login`（图形验证码 + BCrypt），
-  校验通过后经**服务间内部接口** `POST /api/auth/internal/token`（`X-Internal-Secret`，不经网关）签发令牌；
-  `admin-web` 登录页已接真实接口。学生端登录（F1.1）仍未实现，本地验证仍靠开发夹具：
+- 鉴权：**Session + Cookie（有状态）** —— 浏览器持有 HttpOnly Cookie `YX_SESSION`（不透明 sessionId，SameSite=Lax，云端 Secure），
+  `auth-service` 在 Redis 存 `sessionId → userId/role`（TTL 2h）；网关 `AuthGlobalFilter` 先剥离入站 `X-User-*`，
+  再按 Cookie 查会话（兼容 `Authorization: Bearer` 夹具），注入用户上下文，并对 `/api/admin/**` 做 ADMIN 授权校验；
+  **登出即删会话键 + 清 Cookie，旧 Cookie 立即失效**。
+  管理员认证（F9.1，2026-11-10）：`admin-service` 的 `/api/admin/auth/captcha`、`/login`、`/register`、`/logout`、`/me`
+  （图形验证码 + BCrypt；会话由内部接口 `POST /api/auth/internal/session` 创建，`X-Internal-Secret`，不经网关）；
+  `admin-web` 登录/注册页已接真实接口，**前端不存令牌**。自助注册默认开启，**上云前必须 `AUTH_REGISTER_ENABLED=false`**。
+  学生端登录（F1.1）仍未实现，本地验证仍靠开发夹具：
   `POST http://localhost:8100/api/dev/token?userId=123&role=STUDENT` 与 `DELETE .../api/dev/session/{jti}`，
   默认关闭（`AUTH_FIXTURE_ENABLED=true`），只能直连 8100；业务登录（F1.1）实现后删除夹具。
 - 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_<说明>.sql`（**10 个文件** = 7 个 init + 3 个增量，合计 **24 张表**），2026-10-27 已在干净容器上按版本号顺序验证建表通过（24 表 / 0 外键 / 全 InnoDB）；2026-11-03 新增增量把 `auth_user.password_hash` 收紧为 `NOT NULL`（全量账号必填 BCrypt 散列，见 [docs/数据建模.md](docs/数据建模.md) §8.2.1）。

@@ -20,11 +20,23 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "yingxin.auth")
 public class AdminAuthProperties {
 
-    /** 服务间内部接口凭证（admin-service → auth-service 签发令牌） */
+    /** 服务间内部接口凭证（admin-service → auth-service 创建/删除会话） */
     private String internalSecret = "yingxin-local-dev-internal-secret-change-me";
 
-    /** auth-service 内部签发接口地址 */
-    private String tokenIssueUrl = "http://localhost:8100/api/auth/internal/token";
+    /** auth-service 内部会话接口地址（POST 创建；DELETE 时拼 /{sessionId}） */
+    private String sessionUrl = "http://localhost:8100/api/auth/internal/session";
+
+    /** 会话 Cookie 名（HttpOnly） */
+    private String cookieName = "YX_SESSION";
+
+    /** 是否只允许 HTTPS 传输 Cookie：本地 HTTP 必须 false，云端必须 true */
+    private boolean cookieSecure = false;
+
+    /** SameSite：Lax 可防绝大多数跨站携带（CSRF），不要轻易改 None */
+    private String cookieSameSite = "Lax";
+
+    /** 是否开放自助注册：课程演示默认开，生产必须由环境变量关闭 */
+    private boolean registerEnabled = true;
 
     /** 图形验证码有效期 */
     private Duration captchaTtl = Duration.ofMinutes(5);

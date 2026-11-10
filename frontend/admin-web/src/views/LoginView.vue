@@ -62,6 +62,11 @@
         </el-button>
       </el-form>
 
+      <p class="switch">
+        没有账号？
+        <router-link to="/register">去注册</router-link>
+      </p>
+
       <p v-if="isDev" class="tip">演示账号：由课程另行提供（仅开发环境显示）</p>
       <p v-else class="tip">账号由学校信息中心统一分配</p>
     </el-card>
@@ -143,17 +148,28 @@ async function handleLogin() {
       return
     }
 
-    userStore.setLogin(res.data.token, res.data.username, res.data.realName)
+    // 会话凭证是后端 Set-Cookie 下来的 HttpOnly Cookie，前端只记录展示用的用户信息
+    userStore.setUser({
+      username: res.data?.username || form.username.trim(),
+      realName: res.data?.realName || '',
+    })
     ElMessage.success('登录成功')
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
     router.replace(redirect)
   } catch (e) {
-    // 1003 / 1004 走 HTTP 401，提示已在 request.js 拦截器完成；这里只做清理与换码
+    // 1003 账号或密码错误 / 1004 禁用 走 HTTP 401，拦截器已静音，文案在这里展示
+    ElMessage.error(failureText(e, '登录失败，请检查账号与密码'))
     form.password = ''
     await loadCaptcha()
   } finally {
     submitting.value = false
   }
+}
+
+/** 401 已被 request.js 静默，需要调用方自己把后端文案展示出来 */
+function failureText(e, fallback) {
+  if (!e?.response) return '网络异常，请检查网络后重试'
+  return e.response.data?.message || fallback
 }
 
 onMounted(loadCaptcha)
@@ -224,5 +240,21 @@ onMounted(loadCaptcha)
   text-align: center;
   font-size: 12px;
   color: #909399;
+}
+
+.switch {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #606266;
+}
+
+.switch a {
+  color: var(--el-color-primary);
+  text-decoration: none;
+}
+
+.switch a:hover {
+  text-decoration: underline;
 }
 </style>

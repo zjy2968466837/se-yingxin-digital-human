@@ -13,6 +13,12 @@ public final class AdminErrorCodes {
     /** 连续登录失败达到阈值，账号临时锁定 */
     public static final int LOGIN_LOCKED = 2803;
 
+    /** 用户名已存在（注册） */
+    public static final int USERNAME_EXISTS = 2804;
+
+    /** 自助注册入口已关闭 */
+    public static final int REGISTER_DISABLED = 2805;
+
     private AdminErrorCodes() {
     }
 }

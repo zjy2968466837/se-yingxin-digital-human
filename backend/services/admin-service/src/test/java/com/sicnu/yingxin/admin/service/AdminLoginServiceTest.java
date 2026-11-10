@@ -1,12 +1,12 @@
 package com.sicnu.yingxin.admin.service;
 
-import com.sicnu.yingxin.admin.client.AuthTokenClient;
+import com.sicnu.yingxin.admin.client.AuthSessionClient;
 import com.sicnu.yingxin.admin.config.AdminAuthProperties;
 import com.sicnu.yingxin.admin.constant.AdminErrorCodes;
 import com.sicnu.yingxin.admin.dto.AdminLoginRequest;
 import com.sicnu.yingxin.admin.entity.AdminUser;
 import com.sicnu.yingxin.admin.mapper.AdminUserMapper;
-import com.sicnu.yingxin.admin.vo.AdminLoginVO;
+import com.sicnu.yingxin.admin.vo.AdminAuthResult;
 import com.sicnu.yingxin.common.core.error.BizException;
 import com.sicnu.yingxin.common.core.error.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 /**
  * 登录核心逻辑的纯单元测试：不连 MySQL / Redis。
  *
- * <p>重点验证三件事：账号不存在与口令错误同码、锁定先于查库、签发令牌前不泄露任何口令信息。
+ * <p>重点验证：账号不存在与口令错误同码、锁定先于查库、失败时不创建会话。
  */
 @ExtendWith(MockitoExtension.class)
 class AdminLoginServiceTest {
@@ -49,7 +49,7 @@ class AdminLoginServiceTest {
     LoginFailCounter failCounter;
 
     @Mock
-    AuthTokenClient tokenClient;
+    AuthSessionClient sessionClient;
 
     private final AdminAuthProperties properties = new AdminAuthProperties();
 
@@ -58,7 +58,7 @@ class AdminLoginServiceTest {
     @BeforeEach
     void setUp() {
         service = new AdminLoginService(mapper, passwordEncoder, captchaService, failCounter,
-                tokenClient, properties);
+                sessionClient, properties);
     }
 
     private AdminLoginRequest request() {
@@ -81,17 +81,20 @@ class AdminLoginServiceTest {
     }
 
     @Test
-    @DisplayName("正确口令：签发令牌并重置失败计数")
+    @DisplayName("正确口令：创建会话并重置失败计数")
     void login_success() {
         when(mapper.selectOne(any())).thenReturn(user(1));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(tokenClient.issue(anyLong(), eq("ADMIN"))).thenReturn(new AuthTokenClient.TokenResponse("jwt-token", 7200));
+        when(sessionClient.create(1001L, "ADMIN"))
+                .thenReturn(new AuthSessionClient.SessionResponse("sid-1", 7200));
 
-        AdminLoginVO result = service.login(request());
+        AdminAuthResult result = service.login(request());
 
-        assertThat(result.token()).isEqualTo("jwt-token");
-        assertThat(result.expiresIn()).isEqualTo(7200);
-        assertThat(result.realName()).isEqualTo("演示管理员");
+        assertThat(result.user().username()).isEqualTo("admin");
+        assertThat(result.user().realName()).isEqualTo("演示管理员");
+        assertThat(result.user().role()).isEqualTo("ADMIN");
+        assertThat(result.user().expiresIn()).isEqualTo(7200);
+        assertThat(result.sessionId()).isEqualTo("sid-1");
         verify(failCounter).reset("admin");
         verify(mapper).updateById(any(AdminUser.class));
     }
@@ -107,7 +110,7 @@ class AdminLoginServiceTest {
                 .extracting("code").isEqualTo(ErrorCode.BAD_CREDENTIALS.getCode());
         verify(passwordEncoder).matches(eq("demo-pass"), anyString());
         verify(failCounter).increase("admin");
-        verify(tokenClient, never()).issue(anyLong(), anyString());
+        verify(sessionClient, never()).create(anyLong(), anyString());
     }
 
     @Test
@@ -121,6 +124,7 @@ class AdminLoginServiceTest {
                 .extracting("code").isEqualTo(ErrorCode.BAD_CREDENTIALS.getCode());
         verify(failCounter).increase("admin");
         verify(mapper, never()).updateById(any(AdminUser.class));
+        verify(sessionClient, never()).create(anyLong(), anyString());
     }
 
     @Test
@@ -132,7 +136,7 @@ class AdminLoginServiceTest {
         assertThatThrownBy(() -> service.login(request()))
                 .isInstanceOf(BizException.class)
                 .extracting("code").isEqualTo(ErrorCode.ACCOUNT_DISABLED.getCode());
-        verify(tokenClient, never()).issue(anyLong(), anyString());
+        verify(sessionClient, never()).create(anyLong(), anyString());
     }
 
     @Test
@@ -144,6 +148,7 @@ class AdminLoginServiceTest {
                 .isInstanceOf(BizException.class)
                 .extracting("code").isEqualTo(AdminErrorCodes.LOGIN_LOCKED);
         verify(mapper, never()).selectOne(any());
+        verify(sessionClient, never()).create(anyLong(), anyString());
     }
 
     @Test

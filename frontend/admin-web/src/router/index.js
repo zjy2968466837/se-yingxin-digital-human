@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const routes = [
   { path: '/', redirect: '/dashboard' },
@@ -7,6 +8,12 @@ const routes = [
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
     meta: { public: true, title: '登录' },
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: { public: true, title: '注册' },
   },
   {
     path: '/dashboard',
@@ -27,12 +34,27 @@ const router = createRouter({
   routes,
 })
 
-// 简单登录守卫：未登录跳登录页（真实鉴权待接入 auth-service）
-router.beforeEach((to) => {
-  const token = localStorage.getItem('yingxin_token')
-  if (!to.meta.public && !token) {
+/**
+ * 会话守卫：凭证是 HttpOnly Cookie，前端拿不到，只能问后端 /me。
+ * - public 路由（/login、/register）直接放行 —— 跳转目标是 public 时不会再回到守卫，不会死循环；
+ * - 其余路由：未确认过会话状态就先 fetchMe()，失败跳登录并带上 redirect。
+ */
+router.beforeEach(async (to) => {
+  if (to.meta.public) return true
+
+  const userStore = useUserStore()
+  if (!userStore.checked) {
+    const ok = await userStore.fetchMe()
+    if (!ok) {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+  }
+
+  // checked 为 true 但没有用户 = 确认过且未登录（如刚退出登录）
+  if (!userStore.username) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
+
   return true
 })
 

@@ -43,8 +43,9 @@ async function check() {
   }
 }
 
-function handleLogout() {
-  userStore.logout()
+async function handleLogout() {
+  // 调 /admin/auth/logout 让后端删会话、清 Cookie，失败也照样清本地状态
+  await userStore.logout()
   router.push('/login')
 }
 </script>
