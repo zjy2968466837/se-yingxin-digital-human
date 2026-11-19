@@ -2,6 +2,7 @@ package com.sicnu.yingxin.common.web.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
@@ -37,6 +38,9 @@ public class JacksonConfig {
                 .serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(dateTime))
                 .deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(dateTime))
                 .serializerByType(LocalDate.class, new LocalDateSerializer(date))
-                .deserializerByType(LocalDate.class, new LocalDateDeserializer(date));
+                .deserializerByType(LocalDate.class, new LocalDateDeserializer(date))
+                // 雪花 ID 超出 JS Number.MAX_SAFE_INTEGER 会丢精度（接口规范：ID 一律传字符串）
+                .serializerByType(Long.class, ToStringSerializer.instance)
+                .serializerByType(Long.TYPE, ToStringSerializer.instance);
     }
 }

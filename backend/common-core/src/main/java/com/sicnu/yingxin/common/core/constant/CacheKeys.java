@@ -14,11 +14,23 @@ public final class CacheKeys {
     /** 会话：yx:auth:session:{tokenId}，TTL 与令牌一致（令牌失效即删） */
     public static final String AUTH_SESSION = PREFIX + "auth:session:";
 
+    /** 登录失败计数：yx:auth:fail:{account}，固定短 TTL（10 分钟窗口） */
+    public static final String AUTH_FAIL = PREFIX + "auth:fail:";
+
+    /** 登录锁定：yx:auth:lock:{account}，固定短 TTL（10 分钟） */
+    public static final String AUTH_LOCK = PREFIX + "auth:lock:";
+
     /** 问答热点头：yx:qa:hot:{questionHash}，命中即回，内容发布时失效 */
     public static final String QA_HOT = PREFIX + "qa:hot:";
 
     /** 限流计数：yx:<服务>:rate:{标识}，固定短 TTL */
     public static final String RATE_LIMIT = "%s:rate:%s";
+
+    /** 数据看板聚合版本号：yx:admin:dash:version，事件落库即 INCR 主动失效快照 */
+    public static final String DASH_VERSION = PREFIX + "admin:dash:version";
+
+    /** 数据看板聚合快照：yx:admin:dash:snapshot:{version}，TTL 兜底 */
+    public static final String DASH_SNAPSHOT = PREFIX + "admin:dash:snapshot:";
 
     public static String authSession(String tokenId) {
         return AUTH_SESSION + tokenId;

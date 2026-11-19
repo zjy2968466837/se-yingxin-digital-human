@@ -58,6 +58,11 @@
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     </dependency>
+    <!-- 密码哈希（F1.1 学号密码登录业务）：仅使用 crypto 子模块，不引入完整 Spring Security -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-crypto</artifactId>
+    </dependency>
 
     <!-- 令牌签发（H-04）：仅本服务签发，网关只校验 -->
     <dependency>
