@@ -54,7 +54,8 @@ spring:
             cors-configurations:
               '[/**]':
                 # Cookie 会话必须配合具体 Origin（allowCredentials=true 时不允许 "*"，否则等于对任意站点开放）
-                allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+                # 5173 = 管理后台；5174 = 学生端 H5（vite 开发端口，见 frontend/miniprogram/vite.config.js）
+                allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174}
                 allowedMethods: "*"
                 allowedHeaders: "*"
                 allowCredentials: true
