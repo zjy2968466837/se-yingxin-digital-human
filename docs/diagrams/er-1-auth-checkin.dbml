@@ -1,0 +1,81 @@
+// ============================================================
+// 自动生成，请勿手改 —— 源：docs/数据建模.dbml（表）+ docs/数据建模.md §4.1（关系）
+// 生成脚本：scripts/split_dbml.py
+// 用途：仅用于出图（图4-1 ER-1 身份与报到（auth + checkin））
+// 字段：出图用关键字段（每表 3–5 列），全字段明细见《数据库设计说明书》4.2
+// 注意：不要从本文件导出 DDL；DDL 只从 docs/数据建模.dbml 全量导出
+// 说明：checkin_* 通过 user_id / step_code 逻辑引用认证域与步骤模板，无物理外键。
+// ============================================================
+
+Table auth_user {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  student_no           VARCHAR(32)      [note: '学号，与 openid 至少一个非空']
+  openid               VARCHAR(64)      [note: '微信 openid，唯一']
+  status               TINYINT          [not null, note: '1 正常 / 2 禁用 / 3 未激活']
+  Note: '用户账号'
+}
+
+Table auth_identity {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [not null, note: '唯一']
+  edu_level            TINYINT          [not null, note: '1 本科 / 2 研究生 / 3 其他']
+  college              VARCHAR(64)      [note: '学院']
+  batch_id             BIGINT           [not null, note: '报到批次，引用 admin_config 中的批次定义']
+  Note: '身份档案'
+}
+
+Table checkin_step_template {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  step_code            VARCHAR(32)      [not null, note: '步骤编码，唯一（如 PRE_REG、PAY）']
+  seq                  INT              [not null, note: '顺序号，从 1 递增']
+  enabled              TINYINT(1)       [not null, note: '启停开关']
+  Note: '报到步骤模板'
+}
+
+Table checkin_progress {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [not null, note: '学生']
+  step_code            VARCHAR(32)      [not null, note: '步骤']
+  status               TINYINT          [not null, note: '1 待办 / 2 已完成 / 3 不适用']
+  checkin_time         DATETIME(3)      [note: '打卡时间']
+  Note: '报到进度记录'
+}
+
+Table checkin_certificate {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [not null, note: '学生']
+  batch_id             BIGINT           [not null, note: '报到批次（签发时写入，DI-5「同批次一张有效凭证」的判定依据）']
+  cert_no              VARCHAR(32)      [not null, note: '凭证编号，唯一']
+  verify_status        TINYINT          [not null, note: '1 未核销 / 2 已核销 / 3 已作废']
+  Note: '报到凭证'
+}
+
+Table auth_push_record {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [not null, note: '接收人']
+  channel              TINYINT          [not null, note: '1 站内信 / 2 公众号模板消息']
+  status               TINYINT          [not null, note: '1 待发 / 2 成功 / 3 失败']
+  Note: '待办推送记录'
+}
+
+Table checkin_material_item {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  step_code            VARCHAR(32)      [not null, note: '归属步骤']
+  name                 VARCHAR(64)      [not null, note: '材料名称（通知书/档案/党团关系/照片/户口）']
+  required             TINYINT(1)       [not null, note: '是否必需']
+  Note: '材料清单项'
+}
+
+// ---- 关系（取自《数据建模》§4.1）----
+// 1 : 0..1 身份档案
+Ref: auth_user.id > auth_identity.user_id
+// 1 : N 推送记录
+Ref: auth_user.id > auth_push_record.user_id
+// 1 : N 步骤定义
+Ref: checkin_step_template.step_code > checkin_progress.step_code
+// 1 : N 材料清单
+Ref: checkin_step_template.step_code > checkin_material_item.step_code
+// 1 : N 报到进度
+Ref: auth_user.id > checkin_progress.user_id
+// 1 : 0..1 报到凭证
+Ref: auth_user.id > checkin_certificate.user_id

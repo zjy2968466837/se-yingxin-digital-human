@@ -42,6 +42,27 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+yingxin:
+  api-doc:
+    title: 管理后台服务接口文档
+    description: FR-9 管理后台：话术配置、问答库、公告、统计与分权
+  # 管理员认证（FR-9.1）：Session + HttpOnly Cookie；内部凭证必须与 auth-service 的 AUTH_INTERNAL_SECRET 一致
+  auth:
+    internal-secret: ${AUTH_INTERNAL_SECRET:yingxin-local-dev-internal-secret-change-me}
+    session-url: ${AUTH_SESSION_URL:http://localhost:8100/api/auth/internal/session}
+    # Cookie：本地 HTTP 必须 false；云端 HTTPS 必须 true（Secure 属性）
+    cookie-name: ${AUTH_COOKIE_NAME:YX_SESSION}
+    cookie-secure: ${AUTH_COOKIE_SECURE:false}
+    cookie-same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
+    # 自助注册：课程演示默认开，上云前必须 AUTH_REGISTER_ENABLED=false
+    register-enabled: ${AUTH_REGISTER_ENABLED:true}
+    # 图形验证码 5 分钟；失败计数窗口 10 分钟（=锁定时长），阈值对应 admin_config 的 auth.login.fail.lock.times
+    captcha-ttl: 5m
+    login-fail-window: 10m
+    login-fail-lock-times: ${AUTH_LOGIN_FAIL_LOCK_TIMES:5}
+    # BCrypt 代价因子（开发规范 §5.5）：10–14，默认 12
+    bcrypt-cost: ${AUTH_BCRYPT_COST:12}
+
 management:
   endpoints:
     web:

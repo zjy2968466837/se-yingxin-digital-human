@@ -1,0 +1,40 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost_info": {
+      "query_cost": "3.15"
+    },
+    "table": {
+      "table_name": "checkin_progress",
+      "access_type": "ref",
+      "possible_keys": [
+        "uk_user_step",
+        "idx_user_status"
+      ],
+      "key": "uk_user_step",
+      "used_key_parts": [
+        "user_id"
+      ],
+      "key_length": "8",
+      "ref": [
+        "const"
+      ],
+      "rows_examined_per_scan": 9,
+      "rows_produced_per_join": 0,
+      "filtered": "10.00",
+      "index_condition": "(`yingxin`.`checkin_progress`.`deleted` = 0)",
+      "cost_info": {
+        "read_cost": "2.25",
+        "eval_cost": "0.09",
+        "prefix_cost": "3.15",
+        "data_read_per_join": "1K"
+      },
+      "used_columns": [
+        "user_id",
+        "step_code",
+        "status",
+        "deleted"
+      ]
+    }
+  }
+}

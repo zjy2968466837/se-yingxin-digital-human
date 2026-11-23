@@ -13,5 +13,18 @@
   },
   "[xml]": {
     "editor.tabSize": 4
-  }
+  },
+  "[sql]": {
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "ReneSaarsoo.sql-formatter-vsc",
+    "editor.formatOnSave": false
+  },
+  "SQL-Formatter-VSCode.dialect": "mysql",
+  "SQL-Formatter-VSCode.keywordCase": "upper",
+  "SQL-Formatter-VSCode.dataTypeCase": "upper",
+  "SQL-Formatter-VSCode.expressionWidth": 100,
+  "database-client.defaultSelectLimit": 200,
+  "database-client.highlightSQLBlock": true,
+  "database-client.confirmWhenUpdateWithoutWhere": true,
+  "database-client.telemetry.usesOnlineServices": false
 }

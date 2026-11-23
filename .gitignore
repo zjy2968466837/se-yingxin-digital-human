@@ -53,3 +53,11 @@ application-prod.yml
 
 # 前端默认配置不含密码，需要入库（上面的 .env.* 会误伤）
 !frontend/*/.env.development
+
+# 本地数据库凭据，只在本机用，禁止入库
+docs/本地数据库-勿上传.md
+
+# 代理/编辑器工具状态，不入库
+.zcode/
+.vscode/*.code-profile
+skills-lock.json

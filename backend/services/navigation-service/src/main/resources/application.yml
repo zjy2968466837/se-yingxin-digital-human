@@ -42,6 +42,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+yingxin:
+  api-doc:
+    title: 校园导航服务接口文档
+    description: FR-4 校园导航：POI 与路网为静态 JSON，不入库
+
 management:
   endpoints:
     web:

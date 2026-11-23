@@ -1,0 +1,52 @@
+# 管理后台登录链路（VS Code REST Client 扩展：humao.rest-client）
+#
+# 用法：
+#   1. 在仓库根目录建 `.env`（已被 .gitignore 忽略）：
+#        ADMIN_USER=admin
+#        ADMIN_PASSWORD=你的本地测试口令
+#   2. 先发「验证码」请求，拿到 captchaId；
+#      code 不在响应里，到 Redis 查 `yx:admin:captcha:<captchaId>`
+#      （VS Code 用 Database Client 连 127.0.0.1:6380，或跑 scripts/verify-auth-chain.sh）。
+#   3. 把 code 填进下面 login 的 captchaCode，发送后 Cookie 由 REST Client 自动保存/携带。
+#
+# 想一键全链路（含 Redis、403 授权、登出失效）：Terminal → Run Task → verify: 登录数据链路
+
+@gateway = http://127.0.0.1:8080
+@adminUser = {{$dotenv ADMIN_USER}}
+@adminPassword = {{$dotenv ADMIN_PASSWORD}}
+
+### 1. 验证码（记下 data.captchaId）
+# @name captcha
+GET {{gateway}}/api/admin/auth/captcha
+
+### 2. 登录（成功后 Set-Cookie: YX_SESSION，响应体不含令牌）
+# @name login
+POST {{gateway}}/api/admin/auth/login
+Content-Type: application/json; charset=UTF-8
+
+{
+  "username": "{{adminUser}}",
+  "password": "{{adminPassword}}",
+  "captchaId": "{{captcha.response.body.$.data.captchaId}}",
+  "captchaCode": "PASTE_CODE_FROM_REDIS"
+}
+
+### 3. 当前登录人（网关查 Redis 会话后注入 X-User-*）
+GET {{gateway}}/api/admin/auth/me
+
+### 4. 注册（课程演示；生产关闭 AUTH_REGISTER_ENABLED）
+# @name register
+POST {{gateway}}/api/admin/auth/register
+Content-Type: application/json; charset=UTF-8
+
+{
+  "username": "demo_user01",
+  "realName": "演示用户",
+  "password": "Password123",
+  "confirmPassword": "Password123",
+  "captchaId": "{{captcha.response.body.$.data.captchaId}}",
+  "captchaCode": "PASTE_CODE_FROM_REDIS"
+}
+
+### 5. 登出（删会话 + 清 Cookie）
+POST {{gateway}}/api/admin/auth/logout

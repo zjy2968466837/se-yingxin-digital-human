@@ -1,0 +1,64 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "管理后台服务接口文档",
+    "description": "FR-9 管理后台：话术配置、问答库、公告、统计与分权",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8107",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "管理后台",
+      "description": "F11.2 连通性自检：验证服务启动、网关路由与统一响应体"
+    }
+  ],
+  "paths": {
+    "/api/admin/ping": {
+      "get": {
+        "tags": [
+          "管理后台"
+        ],
+        "summary": "连通性自检",
+        "description": "返回服务名、UP 状态与服务器时间",
+        "operationId": "ping",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultMapStringObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ResultMapStringObject": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      }
+    }
+  }
+}
