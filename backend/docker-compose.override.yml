@@ -1,0 +1,5 @@
+# 本地联调覆盖（不提交）：本机 3306/3307 被占用，MySQL 映射到 13306
+services:
+  mysql:
+    ports: !override
+      - "13306:3306"

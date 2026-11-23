@@ -1,1 +1,3 @@
 com.sicnu.yingxin.common.web.config.CommonWebAutoConfiguration
+com.sicnu.yingxin.common.web.event.EventPublisherAutoConfiguration
+com.sicnu.yingxin.common.web.event.MqTopologyConfiguration

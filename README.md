@@ -27,6 +27,44 @@
 9. 管理后台（话术配置、问答库管理、数据统计、分权维护）
 10. 双端适配（学生端网页 + 管理后台；小程序 / H5 / 官网嵌入 / PC 大屏等多端方案已裁剪，见《需求分析文档》§8.4.1）
 
+## 当前实现进度（feat/core-chain 分支）
+
+核心链路已可端到端演示：
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| 统一鉴权（auth-service） | 已完成 | 学号/后台登录、JWT + Redis 会话（复用脚手架 JwtService/SessionService）、注册→审批流 |
+| 禅道式 RBAC 权限中心 | 已完成 | user→group→grouppriv 模型、权限矩阵在线调整、审计日志、鉴权链路追踪 |
+| 网关统一鉴权（gateway） | 已完成 | 脚手架 AuthGlobalFilter 基础上放行 /api/auth/register |
+| 报到服务（checkin-service） | 已完成 | 步骤清单、幂等打卡、进度、报到凭证 |
+| 问答服务（qa-service） | 已完成 | 问答库检索（2-gram 相似度）、Redis 热点缓存、未解答记录、管理端 CRUD |
+| 消息队列事件流 | 已完成 | RabbitMQ 事件队列 + event-worker 攒批落库 + 重试 3 次进死信队列 |
+| 数据看板（admin-service） | 已完成 | KPI/分时趋势/学院进度/热门问题/命中分布，Redis 版本号缓存 5 秒轮询 |
+| 管理后台（admin-web） | 已完成 | 登录、数据看板、用户审批、角色与权限矩阵、问答库、报到管理、审计日志 |
+| 导航/资助/生活/内容 | 骨架 | ping 接口，按接口文档待实现 |
+
+表结构变更已同步 [docs/数据建模.md](docs/数据建模.md) §10「二期新增表」。
+
+## 快速启动（本地演示）
+
+前置：JDK 17+、Node 22+、pnpm、Docker Desktop。
+
+```bash
+cd backend
+scripts/start-dev.cmd          # 基础设施(MySQL/Redis/RabbitMQ) + Flyway 迁移 + 7 个服务
+# 可选：灌入演示数据（40 名新生、历史报到/问答埋点），看板数据更饱满
+docker exec -i yingxin-mysql mysql -uyingxin -pyingxin123 yingxin < scripts/seed-demo-data.sql
+docker exec yingxin-redis redis-cli INCR yx:admin:dash:version
+# 可选：模拟一批新生真实登录/打卡/提问（事件经 MQ → worker → 看板刷新）
+node scripts/demo-load.mjs 12
+
+cd ../frontend/admin-web && pnpm install && pnpm dev   # http://localhost:5173
+```
+
+演示账号（密码均为 `123456`）：`admin`（管理员入口）、`ST2026001`–`ST2026040`（学生）、
+`T2026001`（辅导员组）、`C2026001`（学院管理员组，初始待审批，用于演示审批流）。
+RabbitMQ 控制台 http://localhost:15672（guest/guest）。
+
 ## 文档索引
 
 - [环境搭建指南](docs/环境搭建指南.md) ← **新人先看这个**

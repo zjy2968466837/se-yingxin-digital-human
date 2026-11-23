@@ -52,6 +52,26 @@ services:
       timeout: 3s
       retries: 10
 
+  # 事件队列：问答/打卡埋点异步落库 + 死信队列（管理台仅本地演示用）
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: yingxin-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      TZ: Asia/Shanghai
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   # 本地 S3 兼容对象存储（rclone 保底）。
   # 课程/报告主选 SeaweedFS 4.51：Windows 单文件 weed.exe + Filer UI（8888），
   #   与 rclone 同走 S3 协议，common-file 的 MinioFileStorage 零代码改动，
@@ -79,4 +99,5 @@ services:
 volumes:
   mysql-data:
   redis-data:
+  rabbitmq-data:
   s3-data:

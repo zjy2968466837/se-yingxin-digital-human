@@ -15,6 +15,7 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -30,8 +31,8 @@ import java.util.UUID;
 /**
  * 网关统一鉴权（H-04 / H-13，开发规范 §4.2）——**唯一的鉴权入口**。
  *
- * <p>流程（顺序不能变）：剥离入站用户头 → 取 {@code Authorization: Bearer} →
- * 校验签名与有效期 → 校验 Redis 会话存在 → 注入 {@code X-User-Id} / {@code X-User-Role}。
+ * <p>流程（顺序不能变）：剥离入站用户头 → 优先取 Session Cookie（否则回退 Bearer）→
+ * 校验 Redis 会话 → 授权判断（{@code /api/admin/**} 必须 ADMIN）→ 注入 {@code X-User-Id} / {@code X-User-Role}。
  *
  * <p>三个安全前提：
  * ① 入站同名头**先删再注入**，否则外部可伪造身份（伪造 {@code X-User-Id} 不得放行）；
@@ -48,7 +49,14 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/*/ping",
             "/api/auth/login/**",
             "/api/auth/wechat/**",
+            "/api/admin/auth/captcha",
+            "/api/admin/auth/login",
+            "/api/admin/auth/register",
+            "/api/admin/auth/logout",
             "/api/public/**");
+
+    /** 管理后台路径要求的角色（授权：认证通过 ≠ 有权限） */
+    private static final String ADMIN_ROLE = "ADMIN";
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final AuthProperties properties;
@@ -84,9 +92,47 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange.mutate().request(sanitized).build());
         }
 
+        // ② 优先 Session + Cookie：浏览器自动携带 HttpOnly Cookie，服务端查 Redis 会话
+        String sessionId = cookieValue(sanitized, HeaderNames.COOKIE_SESSION);
+        if (StringUtils.hasText(sessionId)) {
+            return authenticateBySession(exchange, chain, sanitized, sessionId, path);
+        }
+
+        // ③ 兼容 Authorization: Bearer（开发夹具 / API 客户端）；浏览器正常流程不走这里
+        return authenticateByBearer(exchange, chain, sanitized, path, traceId);
+    }
+
+    /** Session + Cookie 鉴权：sessionId 是不透明随机串，只用于查 Redis，不解析任何声明。 */
+    private Mono<Void> authenticateBySession(ServerWebExchange exchange, GatewayFilterChain chain,
+                                             ServerHttpRequest sanitized, String sessionId, String path) {
+        return redis.opsForValue().get(CacheKeys.authSession(sessionId))
+                .defaultIfEmpty("")
+                .flatMap(json -> {
+                    if (json.isEmpty()) {
+                        // 不记录 sessionId：它本身就是凭证
+                        log.info("会话不存在（已登出或已过期） path={}", path);
+                        return respond(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_INVALID);
+                    }
+                    SessionPayload payload;
+                    try {
+                        payload = objectMapper.readValue(json, SessionPayload.class);
+                    } catch (Exception e) {
+                        log.warn("会话内容解析失败 path={}", path);
+                        return respond(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_INVALID);
+                    }
+                    if (payload.userId() == null) {
+                        return respond(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_INVALID);
+                    }
+                    return forwardAsUser(exchange, chain, sanitized, payload.userId(), payload.role(), path);
+                });
+    }
+
+    /** Bearer 鉴权（兼容路径）：验签 → 校验 Redis 会话 → 注入用户上下文。 */
+    private Mono<Void> authenticateByBearer(ServerWebExchange exchange, GatewayFilterChain chain,
+                                            ServerHttpRequest sanitized, String path, String traceId) {
         String token = stripBearer(sanitized.getHeaders().getFirst(HeaderNames.AUTHORIZATION));
         if (token == null) {
-            return unauthorized(exchange, ErrorCode.UNAUTHORIZED);
+            return respond(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
         }
 
         Claims claims;
@@ -94,38 +140,57 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             claims = jwtVerifier.verify(token);
         } catch (JwtException | IllegalArgumentException e) {
             log.warn("令牌校验失败 path={} traceId={} reason={}", path, traceId, e.getMessage());
-            return unauthorized(exchange, ErrorCode.TOKEN_INVALID);
+            return respond(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_INVALID);
         }
 
         String jti = claims.getId();
         Long userId = toLong(claims.get(ClaimNames.USER_ID));
         String role = claims.get(ClaimNames.ROLE, String.class);
         if (jti == null || userId == null) {
-            return unauthorized(exchange, ErrorCode.TOKEN_INVALID);
+            return respond(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_INVALID);
         }
 
-        // ② 会话必须存在：登出/续期控制都在这里生效
         return redis.hasKey(CacheKeys.authSession(jti))
                 .defaultIfEmpty(Boolean.FALSE)
                 .flatMap(exists -> {
                     if (!Boolean.TRUE.equals(exists)) {
-                        log.info("会话不存在（已登出或已过期）userId={} jti={} traceId={}", userId, jti, traceId);
-                        return unauthorized(exchange, ErrorCode.TOKEN_INVALID);
+                        log.info("会话不存在（已登出或已过期）userId={} traceId={}", userId, traceId);
+                        return respond(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_INVALID);
                     }
-                    ServerHttpRequest authenticated = sanitized.mutate()
-                            .headers(headers -> {
-                                headers.set(HeaderNames.USER_ID, String.valueOf(userId));
-                                headers.set(HeaderNames.USER_ROLE, role == null ? "" : role);
-                            })
-                            .build();
-                    return chain.filter(exchange.mutate().request(authenticated).build());
+                    return forwardAsUser(exchange, chain, sanitized, userId, role, path);
                 });
     }
 
-    /** 鉴权失败也返回统一响应体（网关只引 common-core 的原因），HTTP 401 只表达传输语义。 */
-    private Mono<Void> unauthorized(ServerWebExchange exchange, ErrorCode errorCode) {
+    /**
+     * 授权校验 + 注入用户上下文。
+     *
+     * <p>认证只回答"你是谁"；这里再回答"你能不能进"：{@code /api/admin/**} 必须是 ADMIN。
+     * 其余路径暂不做细粒度 RBAC（F9.2 再按 role_code + 数据范围展开）。
+     */
+    private Mono<Void> forwardAsUser(ServerWebExchange exchange, GatewayFilterChain chain,
+                                     ServerHttpRequest sanitized, long userId, String role, String path) {
+        if (path.startsWith("/api/admin/") && !ADMIN_ROLE.equals(role)) {
+            log.info("越权访问 path={} userId={} role={}", path, userId, role);
+            return respond(exchange, HttpStatus.FORBIDDEN, ErrorCode.NO_PERMISSION);
+        }
+        ServerHttpRequest authenticated = sanitized.mutate()
+                .headers(headers -> {
+                    headers.set(HeaderNames.USER_ID, String.valueOf(userId));
+                    headers.set(HeaderNames.USER_ROLE, role == null ? "" : role);
+                })
+                .build();
+        return chain.filter(exchange.mutate().request(authenticated).build());
+    }
+
+    private static String cookieValue(ServerHttpRequest request, String name) {
+        HttpCookie cookie = request.getCookies().getFirst(name);
+        return cookie == null ? null : cookie.getValue();
+    }
+
+    /** 鉴权/授权失败也返回统一响应体（网关只引 common-core 的原因），HTTP 状态码只表达传输语义。 */
+    private Mono<Void> respond(ServerWebExchange exchange, HttpStatus status, ErrorCode errorCode) {
         ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(HttpStatus.UNAUTHORIZED);
+        response.setStatusCode(status);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         byte[] body;
         try {
@@ -135,6 +200,10 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     + "\",\"data\":null}").getBytes(java.nio.charset.StandardCharsets.UTF_8);
         }
         return response.writeWith(Mono.just(response.bufferFactory().wrap(body)));
+    }
+
+    /** Redis 会话内容（auth-service 写入）：只放 userId/role，不含任何隐私字段。 */
+    private record SessionPayload(Long userId, String role) {
     }
 
     private boolean isWhitelisted(String path) {

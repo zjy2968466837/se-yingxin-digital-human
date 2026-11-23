@@ -53,7 +53,8 @@ spring:
           globalcors:
             cors-configurations:
               '[/**]':
-                allowedOriginPatterns: "*"
+                # Cookie 会话必须配合具体 Origin（allowCredentials=true 时不允许 "*"，否则等于对任意站点开放）
+                allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
                 allowedMethods: "*"
                 allowedHeaders: "*"
                 allowCredentials: true
@@ -64,7 +65,11 @@ yingxin:
     enabled: true
     jwt-secret: ${JWT_SECRET:yingxin-local-dev-jwt-secret-change-me-32bytes}
     # 额外放行：默认空。/actuator/**、/swagger-ui.html 本地调试可临时加，云端必须收敛
-    extra-whitelist: []
+    # /api/auth/register：RBAC 注册审批流的注册入口（未登录可访问）
+    # /actuator/**：本地联调放行；云端必须收敛为空
+    extra-whitelist:
+      - "/api/auth/register"
+      - "/actuator/**"
 
 management:
   endpoints:

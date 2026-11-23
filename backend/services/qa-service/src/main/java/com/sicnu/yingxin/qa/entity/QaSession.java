@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -12,42 +13,52 @@ import java.time.LocalDateTime;
 /**
  * 会话表 qa_session。
  *
- * <p>本项目不使用 {@code @TableLogic}：{@code deleted = 0} 表示未删除，删除时写入本行 {@code id}
- * （数据建模 §1.3 / §5.1），这样唯一索引末位带 {@code deleted} 时仍可"删除后重建同业务键记录"。
+ * <p>{@code deleted = 0} 表示未删除，删除时写入本行 {@code id}（数据建模 §1.3 / §5.1），
+ * 这样唯一索引末位带 {@code deleted} 时仍可"删除后重建同业务键记录"。
  */
 @Data
 @TableName("qa_session")
 public class QaSession {
 
-    /** 雪花 ID，非自增（@TableId 不写会插入失败） */
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
+    /** 用户 ID（qa_session.user_id NOT NULL，创建会话必须登录） */
     private Long userId;
 
-    /** 1 学生端网页 / 2 管理后台，见数据建模附录 B.2 */
+    /** 渠道：1 学生端网页 / 2 管理后台，本服务固定 1 */
     private Integer channel;
 
+    /** 开始时间 */
     private LocalDateTime startTime;
 
+    /** 结束时间 */
     private LocalDateTime endTime;
 
+    /** 消息数 */
     private Integer messageCount;
 
-    /** 是否满意：0 未评价 / 1 满意 / 2 不满意 */
+    /** 满意度 */
     private Integer satisfied;
 
+    /** 创建时间，持久层自动填充 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    /** 更新时间，持久层自动填充 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
+    /** 创建人 id，持久层自动填充 */
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
 
+    /** 修改人 id，持久层自动填充 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateBy;
+
+    /** 逻辑删除：0=未删除；删除时写入本行 id，持久层自动填充 */
+    @TableLogic(value = "0", delval = "id")
 
     @TableField(fill = FieldFill.INSERT)
     private Long deleted;

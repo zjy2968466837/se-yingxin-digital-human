@@ -6,7 +6,7 @@ spring:
     name: qa-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（部署编排见 backend/docker-compose.prod.yml）
+    # 本地默认连 Docker 的 MySQL；云上通过环境变量覆盖（见 docs/部署指南.md）
     # 云端 Azure MySQL 强制 SSL，需设 MYSQL_SSL_MODE=REQUIRED
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:yingxin}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&sslMode=${MYSQL_SSL_MODE:PREFERRED}
     username: ${MYSQL_USER:yingxin}
@@ -28,6 +28,12 @@ spring:
           max-active: 16
           max-idle: 8
           min-idle: 0
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    publisher-confirm-type: correlated
   jackson:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss

@@ -1,232 +1,314 @@
 <template>
-  <el-container style="height: 100%">
-    <el-aside width="200px">
-      <el-menu :default-active="route.path" router>
-        <el-menu-item index="/dashboard">概览</el-menu-item>
-        <el-menu-item index="/qa">问答库管理</el-menu-item>
-      </el-menu>
-    </el-aside>
-
-    <el-container>
-      <el-header class="header">
-        <span class="title">问答会话 · 增删查</span>
-        <span class="chain">Vue → Vite /api 代理 → qa-service:8101 → MyBatis-Plus → CloudBase MySQL</span>
-      </el-header>
-
-      <el-main>
-        <div class="toolbar">
-          <el-button type="primary" @click="openCreate">新建会话</el-button>
-          <el-input
-            v-model="userIdInput"
-            placeholder="按 userId 过滤（可空）"
-            clearable
-            style="width: 220px"
-            @keyup.enter="search"
-          />
-          <el-button @click="search">查询</el-button>
-          <el-button text @click="fetchList">刷新</el-button>
-          <span class="grow" />
-          <span class="hint">共 {{ total }} 条</span>
-        </div>
-
-        <el-table v-loading="loading" :data="rows" border empty-text="还没有会话，点「新建会话」写一条">
-          <el-table-column prop="id" label="id（雪花）" width="210">
-            <template #default="{ row }">
-              <span class="mono">{{ row.id }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="userId" label="userId" width="130">
-            <template #default="{ row }">
-              <span class="mono">{{ row.userId }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="channel" width="140">
-            <template #default="{ row }">
-              <el-tag size="small" :type="row.channel === 1 ? 'success' : 'warning'">
-                {{ row.channel === 1 ? '学生端网页' : '管理后台' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="startTime" label="start_time" width="180" />
-          <el-table-column prop="messageCount" label="message_count" width="160" />
-          <el-table-column prop="satisfied" label="satisfied" width="110">
-            <template #default="{ row }">
-              <span v-if="row.satisfied === null" class="hint">NULL</span>
-              <span v-else>{{ row.satisfied }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createTime" label="create_time" width="180" />
-          <el-table-column label="操作" width="110" fixed="right">
-            <template #default="{ row }">
-              <el-button link type="danger" @click="remove(row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <el-pagination
-          v-model:current-page="query.page"
-          v-model:page-size="query.size"
-          :total="total"
-          :page-sizes="[5, 10, 20]"
-          layout="total, sizes, prev, pager, next"
-          style="margin-top: 14px"
-          @current-change="fetchList"
-          @size-change="search"
+  <!-- 问答库 -->
+  <el-card shadow="never" class="section">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <el-input
+          v-model="keyword"
+          placeholder="搜索问题关键词"
+          clearable
+          style="width: 240px"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
         />
+        <el-button type="primary" plain @click="handleSearch">搜索</el-button>
+      </div>
+      <el-button type="primary" @click="openCreate">新建问答</el-button>
+    </div>
 
-        <el-divider content-position="left">最近一次响应（后端 Result 包体）</el-divider>
-        <pre class="resp">{{ lastResp || '（还没有请求）' }}</pre>
-      </el-main>
-    </el-container>
-  </el-container>
+    <el-table v-loading="loading" :data="list" stripe>
+      <el-table-column prop="question" label="问题" min-width="220" show-overflow-tooltip />
+      <el-table-column prop="answer" label="答案" min-width="220" show-overflow-tooltip />
+      <el-table-column prop="category" label="分类" width="110" />
+      <el-table-column label="同义问法" width="150">
+        <template #default="{ row }">
+          {{ joinList(row.synonyms) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="标签" width="130">
+        <template #default="{ row }">
+          {{ joinList(row.tags) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" width="90">
+        <template #default="{ row }">
+          <el-tag :type="statusType(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="hitCount" label="命中次数" width="100" />
+      <el-table-column prop="version" label="版本" width="80" />
+      <el-table-column prop="updateTime" label="更新时间" width="170" />
+      <el-table-column label="操作" width="140" fixed="right">
+        <template #default="{ row }">
+          <el-button type="primary" size="small" link @click="openEdit(row)">编辑</el-button>
+          <el-button type="danger" size="small" link @click="handleDelete(row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
 
-  <el-dialog v-model="dialog.visible" title="新建会话" width="420px">
-    <el-form label-width="90px">
-      <el-form-item label="userId">
-        <el-input v-model="form.userId" placeholder="纯数字，如 1001" style="width: 100%" />
+    <el-pagination
+      v-model:current-page="page"
+      :page-size="size"
+      :total="total"
+      layout="total, prev, pager, next"
+      class="pagination"
+      @current-change="loadQuestions"
+    />
+  </el-card>
+
+  <!-- 未解答问题 -->
+  <el-card shadow="never" class="section">
+    <template #header>
+      <span>未解答问题</span>
+    </template>
+    <el-table v-loading="unansweredLoading" :data="unanswered" stripe>
+      <el-table-column prop="id" label="ID" width="80" />
+      <el-table-column prop="question" label="问题" min-width="300" show-overflow-tooltip />
+      <el-table-column prop="status" label="状态" width="110">
+        <template #default="{ row }">
+          <el-tag type="warning" size="small">{{ row.status === 1 ? '待处理' : '已处理' }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createTime" label="提问时间" width="180" />
+    </el-table>
+
+    <el-pagination
+      v-model:current-page="unansweredPage"
+      :page-size="size"
+      :total="unansweredTotal"
+      layout="total, prev, pager, next"
+      class="pagination"
+      @current-change="loadUnanswered"
+    />
+  </el-card>
+
+  <!-- 新建/编辑对话框 -->
+  <el-dialog v-model="dialogVisible" :title="editingId ? '编辑问答' : '新建问答'" width="560px">
+    <el-form :model="form" label-width="90px">
+      <el-form-item label="问题">
+        <el-input v-model="form.question" placeholder="标准问题" />
       </el-form-item>
-      <el-form-item label="channel">
-        <el-select v-model="form.channel" style="width: 100%">
-          <el-option :value="1" label="1 · 学生端网页" />
-          <el-option :value="2" label="2 · 管理后台" />
-        </el-select>
+      <el-form-item label="答案">
+        <el-input v-model="form.answer" type="textarea" :rows="4" placeholder="标准答案" />
+      </el-form-item>
+      <el-form-item label="分类">
+        <el-input v-model="form.category" placeholder="如 报到/宿舍/选课" />
+      </el-form-item>
+      <el-form-item label="同义问法">
+        <el-input v-model="form.synonyms" placeholder="多个用英文逗号分隔" />
+      </el-form-item>
+      <el-form-item label="标签">
+        <el-input v-model="form.tags" placeholder="多个用英文逗号分隔" />
+      </el-form-item>
+      <el-form-item v-if="editingId" label="状态">
+        <!-- 后端状态：1 已发布 / 2 草稿 / 3 停用；新建时后端固定为已发布 -->
+        <el-radio-group v-model="form.status">
+          <el-radio :value="1">已发布</el-radio>
+          <el-radio :value="2">草稿</el-radio>
+          <el-radio :value="3">停用</el-radio>
+        </el-radio-group>
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="dialog.visible = false">取消</el-button>
-      <el-button type="primary" :loading="dialog.submitting" @click="submit">保存</el-button>
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="save">保存</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup>
+// 问答库：搜索/新建/行内编辑/删除 + 未解答问题分页
 import { onMounted, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { createSession, deleteSession, listSessions } from '@/api/qa'
+import {
+  createQuestion,
+  deleteQuestion,
+  listQuestions,
+  listUnanswered,
+  updateQuestion,
+} from '@/api/qa'
 
-const route = useRoute()
-
-const loading = ref(false)
-const rows = ref([])
+const size = 10
+const keyword = ref('')
+const page = ref(1)
 const total = ref(0)
-const userIdInput = ref('')
-const lastResp = ref('')
+const list = ref([])
+const loading = ref(false)
 
-const query = reactive({ page: 1, size: 10 })
-const dialog = reactive({ visible: false, submitting: false })
-const form = reactive({ userId: '1001', channel: 1 })
+const unansweredPage = ref(1)
+const unansweredTotal = ref(0)
+const unanswered = ref([])
+const unansweredLoading = ref(false)
 
-/** 统一处理后端 Result：code !== 0 视为业务失败 */
-function accept(res) {
-  lastResp.value = JSON.stringify(res, null, 2)
-  if (res.code !== 0) {
-    ElMessage.error(res.message || '请求失败')
-    return null
-  }
-  return res.data
+const dialogVisible = ref(false)
+const saving = ref(false)
+const editingId = ref(null)
+const form = reactive({
+  question: '',
+  answer: '',
+  category: '',
+  synonyms: '',
+  tags: '',
+  status: 1,
+})
+
+// 同义词/标签为数组时逗号拼接展示
+function joinList(v) {
+  if (Array.isArray(v)) return v.join('、')
+  return v || '-'
 }
 
-async function fetchList() {
+// 后端状态：1 已发布 / 2 草稿 / 3 停用
+const STATUS_MAP = {
+  1: ['已发布', 'success'],
+  2: ['草稿', 'warning'],
+  3: ['停用', 'info'],
+}
+function statusText(s) {
+  return (STATUS_MAP[s] || ['未知', 'info'])[0]
+}
+function statusType(s) {
+  return (STATUS_MAP[s] || ['未知', 'info'])[1]
+}
+
+// 同义词/标签后端是逗号分隔的 String，这里统一成半角逗号 + 去空
+function normalizeList(v) {
+  if (Array.isArray(v)) return v.filter(Boolean).join(',')
+  return (v || '')
+    .replace(/，/g, ',')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(',')
+}
+
+async function loadQuestions() {
   loading.value = true
   try {
-    const res = await listSessions({
-      page: query.page,
-      size: query.size,
-      userId: userIdInput.value ? Number(userIdInput.value) : undefined,
-    })
-    const data = accept(res)
-    if (!data) return
-    rows.value = data.records || []
-    total.value = Number(data.total || 0)
+    const res = await listQuestions({ page: page.value, size, keyword: keyword.value })
+    list.value = res.data.list || []
+    // 后端 Long 统一序列化为字符串，分页组件要数字
+    total.value = Number(res.data.total) || 0
+  } catch {
+    // 错误提示由拦截器统一处理
   } finally {
     loading.value = false
   }
 }
 
-function search() {
-  query.page = 1
-  fetchList()
+async function loadUnanswered() {
+  unansweredLoading.value = true
+  try {
+    const res = await listUnanswered({ page: unansweredPage.value, size })
+    unanswered.value = res.data.list || []
+    unansweredTotal.value = Number(res.data.total) || 0
+  } catch {
+    // 错误提示由拦截器统一处理
+  } finally {
+    unansweredLoading.value = false
+  }
+}
+
+function handleSearch() {
+  page.value = 1
+  loadQuestions()
+}
+
+function resetForm() {
+  form.question = ''
+  form.answer = ''
+  form.category = ''
+  form.synonyms = ''
+  form.tags = ''
+  form.status = 1
 }
 
 function openCreate() {
-  form.userId = '1001'
-  form.channel = 1
-  dialog.visible = true
+  editingId.value = null
+  resetForm()
+  dialogVisible.value = true
 }
 
-async function submit() {
-  const userId = String(form.userId).trim()
-  if (!/^\d+$/.test(userId) || Number(userId) < 1) {
-    ElMessage.warning('userId 必须是不小于 1 的整数')
+function openEdit(row) {
+  editingId.value = row.id
+  form.question = row.question
+  form.answer = row.answer
+  form.category = row.category
+  form.synonyms = Array.isArray(row.synonyms) ? row.synonyms.join(',') : row.synonyms || ''
+  form.tags = Array.isArray(row.tags) ? row.tags.join(',') : row.tags || ''
+  form.status = row.status
+  dialogVisible.value = true
+}
+
+async function save() {
+  if (!form.question || !form.answer) {
+    ElMessage.warning('问题和答案不能为空')
     return
   }
-  dialog.submitting = true
-  try {
-    const data = accept(await createSession({ userId: Number(userId), channel: form.channel }))
-    if (!data) return
-    ElMessage.success(`已写入 qa_session，id=${data.id}`)
-    dialog.visible = false
-    search()
-  } finally {
-    dialog.submitting = false
+  // 后端 DTO 里 synonyms/tags 是 String（逗号分隔），传数组会 400
+  const payload = {
+    question: form.question.trim(),
+    answer: form.answer.trim(),
+    category: form.category.trim(),
+    synonyms: normalizeList(form.synonyms),
+    tags: normalizeList(form.tags),
   }
-}
-
-async function remove(row) {
+  // 新建时后端固定为"已发布"，status 只在编辑时提交
+  if (editingId.value) payload.status = form.status
+  saving.value = true
   try {
-    await ElMessageBox.confirm(
-      `逻辑删除：把 deleted 写成本行 id（不是 1）。id = ${row.id}`,
-      '确认删除',
-      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' },
-    )
+    if (editingId.value) {
+      await updateQuestion(editingId.value, payload)
+      ElMessage.success('保存成功')
+    } else {
+      await createQuestion(payload)
+      ElMessage.success('新建成功')
+    }
+    dialogVisible.value = false
+    loadQuestions()
   } catch {
-    return
-  }
-  const res = await deleteSession(row.id)
-  if (accept(res)) {
-    ElMessage.success('已删除（deleted = 本行 id）')
-    fetchList()
+    // 错误提示由拦截器统一处理
+  } finally {
+    saving.value = false
   }
 }
 
-onMounted(fetchList)
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确认删除问答「${row.question}」？`, '删除确认', { type: 'warning' })
+  } catch {
+    return // 用户取消
+  }
+  try {
+    await deleteQuestion(row.id)
+    ElMessage.success('已删除')
+    loadQuestions()
+  } catch {
+    // 错误提示由拦截器统一处理
+  }
+}
+
+onMounted(() => {
+  loadQuestions()
+  loadUnanswered()
+})
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border-bottom: 1px solid #e4e7ed;
-}
-.title { font-weight: 600; }
-.chain {
-  font-family: Consolas, "Cascadia Code", monospace;
-  font-size: 12px;
-  color: #909399;
+.section {
+  margin-bottom: 16px;
 }
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
-.grow { flex: 1; }
-.hint { color: #909399; font-size: 12px; }
-.mono {
-  font-family: Consolas, "Cascadia Code", monospace;
-  font-size: 12px;
+.toolbar-left {
+  display: flex;
+  gap: 8px;
 }
-.resp {
-  margin: 0;
-  padding: 12px 14px;
-  background: #0f172a;
-  color: #cbd5e1;
-  border-radius: 8px;
-  font-family: Consolas, "Cascadia Code", monospace;
-  font-size: 12px;
-  max-height: 260px;
-  overflow: auto;
+.pagination {
+  margin-top: 12px;
+  justify-content: flex-end;
 }
 </style>

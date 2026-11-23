@@ -14,6 +14,12 @@ public final class CacheKeys {
     /** 会话：yx:auth:session:{tokenId}，TTL 与令牌一致（令牌失效即删） */
     public static final String AUTH_SESSION = PREFIX + "auth:session:";
 
+    /** 登录失败计数：yx:auth:fail:{account}，固定短 TTL（10 分钟窗口） */
+    public static final String AUTH_FAIL = PREFIX + "auth:fail:";
+
+    /** 登录锁定：yx:auth:lock:{account}，固定短 TTL（10 分钟） */
+    public static final String AUTH_LOCK = PREFIX + "auth:lock:";
+
     /** 问答热点头：yx:qa:hot:{questionHash}，命中即回，内容发布时失效 */
     public static final String QA_HOT = PREFIX + "qa:hot:";
 
@@ -23,8 +29,20 @@ public final class CacheKeys {
     /** 分片上传会话：yx:content:upload:{uploadId}；已收分片序号在这个 key 后加 :chunks */
     public static final String CONTENT_UPLOAD = PREFIX + "content:upload:";
 
+    /** 管理后台图形验证码：yx:admin:captcha:{captchaId}，一次性，TTL 5 分钟 */
+    public static final String ADMIN_CAPTCHA = PREFIX + "admin:captcha:";
+
+    /** 管理后台登录失败计数：yx:admin:login:fail:{username}，固定窗口 TTL */
+    public static final String ADMIN_LOGIN_FAIL = PREFIX + "admin:login:fail:";
+
     /** 限流计数：yx:<服务>:rate:{标识}，固定短 TTL */
     public static final String RATE_LIMIT = "%s:rate:%s";
+
+    /** 数据看板聚合版本号：yx:admin:dash:version，事件落库即 INCR 主动失效快照 */
+    public static final String DASH_VERSION = PREFIX + "admin:dash:version";
+
+    /** 数据看板聚合快照：yx:admin:dash:snapshot:{version}，TTL 兜底 */
+    public static final String DASH_SNAPSHOT = PREFIX + "admin:dash:snapshot:";
 
     public static String authSession(String tokenId) {
         return AUTH_SESSION + tokenId;
@@ -44,6 +62,14 @@ public final class CacheKeys {
 
     public static String contentUploadChunks(String uploadId) {
         return CONTENT_UPLOAD + uploadId + ":chunks";
+    }
+
+    public static String adminCaptcha(String captchaId) {
+        return ADMIN_CAPTCHA + captchaId;
+    }
+
+    public static String adminLoginFail(String username) {
+        return ADMIN_LOGIN_FAIL + username;
     }
 
     public static String rateLimit(String service, String identity) {

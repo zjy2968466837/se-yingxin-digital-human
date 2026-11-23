@@ -32,6 +32,7 @@
     <module>services/life-service</module>
     <module>services/content-service</module>
     <module>services/admin-service</module>
+    <module>services/event-worker</module>
   </modules>
 
   <properties>

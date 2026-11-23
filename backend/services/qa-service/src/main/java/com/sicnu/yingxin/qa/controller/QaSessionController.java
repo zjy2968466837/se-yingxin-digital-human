@@ -21,11 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 会话接口（S5 持久化样板）。
  *
- * <p>路径与网关一致：直连 8101 与经 8080 转发都是 {@code /api/qa/sessions}（网关不裁剪前缀）。
+ * <p>路径与网关一致：直连 8101 与经 8080 转发都是 {@code /api/qa/sample/sessions}（网关不裁剪前缀）。
+ *
+ * <p>路径带 {@code /sample}：FR-3 业务接口（{@link QaController}）已占用 {@code /api/qa/sessions}，
+ * 两者不能同路径（Spring 启动报 Ambiguous mapping）。样板保留用于对照写法与单测，业务接口为准。
  */
 @Tag(name = "问答会话（S5 样板）", description = "Controller → Service → Mapper → MySQL + Redis 的最小闭环；不含问答检索等 FR-3 业务逻辑")
 @RestController
-@RequestMapping("/api/qa/sessions")
+@RequestMapping("/api/qa/sample/sessions")
 public class QaSessionController {
 
     private final QaSessionService service;

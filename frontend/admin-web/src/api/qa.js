@@ -1,24 +1,26 @@
 import request from './request'
 
-// 路径与网关一致：/api/qa/** → qa-service(:8101)，网关不裁剪前缀。
-// request.js 的 baseURL 是 /api，所以这里写 /qa/sessions。
-
-/** 分页查询会话：{ page, size, userId } */
-export function listSessions(params) {
-  return request.get('/qa/sessions', { params })
+// 问答库分页查询
+export function listQuestions(params) {
+  return request.get('/qa/admin/questions', { params })
 }
 
-/** 创建会话：{ userId, channel } */
-export function createSession(data) {
-  return request.post('/qa/sessions', data)
+// 新建问答
+export function createQuestion(data) {
+  return request.post('/qa/admin/questions', data)
 }
 
-/** 按 id 查询（会命中 Redis 缓存） */
-export function getSession(id) {
-  return request.get(`/qa/sessions/${id}`)
+// 局部更新问答
+export function updateQuestion(id, data) {
+  return request.patch(`/qa/admin/questions/${id}`, data)
 }
 
-/** 逻辑删除：deleted 写成本行 id */
-export function deleteSession(id) {
-  return request.delete(`/qa/sessions/${id}`)
+// 删除问答
+export function deleteQuestion(id) {
+  return request.delete(`/qa/admin/questions/${id}`)
+}
+
+// 未解答问题分页（status=1 待处理）
+export function listUnanswered(params) {
+  return request.get('/qa/admin/unanswered', { params: { status: 1, ...params } })
 }

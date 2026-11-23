@@ -1,0 +1,55 @@
+server:
+  port: 8110
+
+spring:
+  application:
+    name: event-worker
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:yingxin}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&sslMode=${MYSQL_SSL_MODE:PREFERRED}
+    username: ${MYSQL_USER:yingxin}
+    password: ${MYSQL_PASSWORD:yingxin123}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 5000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 0
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    listener:
+      simple:
+        # 手动 ack + prefetch 背压：攒批期间不无限拉取
+        acknowledge-mode: manual
+        prefetch: 200
+        concurrency: 1
+
+yingxin:
+  worker:
+    # 满批条数与冲刷间隔：把「每人一次写库」合并成「每批一次事务写库」，削峰填谷
+    batch-size: ${WORKER_BATCH_SIZE:100}
+    flush-ms: ${WORKER_FLUSH_MS:200}
+    retry-limit: ${WORKER_RETRY_LIMIT:3}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
