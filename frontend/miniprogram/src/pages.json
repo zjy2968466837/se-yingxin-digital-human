@@ -9,9 +9,27 @@
       }
     },
     {
+      "path": "pages/qa/qa",
+      "style": {
+        "navigationBarTitleText": "智能问答"
+      }
+    },
+    {
+      "path": "pages/checkin/checkin",
+      "style": {
+        "navigationBarTitleText": "报到进度"
+      }
+    },
+    {
       "path": "pages/profile/profile",
       "style": {
         "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
       }
     }
   ],
@@ -27,6 +45,8 @@
     "backgroundColor": "#ffffff",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/qa/qa", "text": "问答" },
+      { "pagePath": "pages/checkin/checkin", "text": "报到" },
       { "pagePath": "pages/profile/profile", "text": "我的" }
     ]
   }

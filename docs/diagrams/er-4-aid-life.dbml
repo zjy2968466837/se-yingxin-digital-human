@@ -1,0 +1,51 @@
+// ============================================================
+// 自动生成，请勿手改 —— 源：docs/数据建模.dbml（表）+ docs/数据建模.md §4.1（关系）
+// 生成脚本：scripts/split_dbml.py
+// 用途：仅用于出图（图4-3 ER-4 资助与生活服务（aid + life））
+// 字段：出图用关键字段（每表 3–5 列），全字段明细见《数据库设计说明书》4.2
+// 注意：不要从本文件导出 DDL；DDL 只从 docs/数据建模.dbml 全量导出
+// 说明：资助申请引用政策；报修单通过 user_id 逻辑关联认证域，无物理外键。
+// ============================================================
+
+Table aid_policy {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  name                 VARCHAR(128)     [not null, note: '政策名称']
+  category             TINYINT          [not null, note: '1 国家助学金 / 2 助学贷款 / 3 勤工助学 / 4 困难补助 / 5 缓交学费 / 6 其他']
+  need_apply           TINYINT(1)       [not null, note: '是否需要线上申请（区分"仅查询"与"可申请"）']
+  status               TINYINT          [not null, note: '1 启用 / 2 停用']
+  Note: '资助政策'
+}
+
+Table aid_application {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [not null, note: '申请学生']
+  policy_id            BIGINT           [not null, note: '申请的政策']
+  batch_id             BIGINT           [not null, note: '报到批次']
+  status               TINYINT          [not null, note: '1 草稿 / 2 待审核 / 3 已通过 / 4 已驳回 / 5 已撤回']
+  Note: '资助申请'
+}
+
+Table life_repair_order {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  user_id              BIGINT           [not null, note: '报修人']
+  category             TINYINT          [not null, note: '1 水电 / 2 家具 / 3 网络 / 4 门窗 / 5 其他']
+  status               TINYINT          [not null, note: '1 待受理 / 2 处理中 / 3 已完成 / 4 已取消']
+  finish_time          DATETIME(3)      [note: '完成时间']
+  Note: '报修单'
+}
+
+Table auth_user {
+  id                   BIGINT           [pk, note: '雪花 ID，主键']
+  student_no           VARCHAR(32)      [note: '学号，与 openid 至少一个非空']
+  openid               VARCHAR(64)      [note: '微信 openid，唯一']
+  status               TINYINT          [not null, note: '1 正常 / 2 禁用 / 3 未激活']
+  Note: '用户账号'
+}
+
+// ---- 关系（取自《数据建模》§4.1）----
+// 1 : N 申请
+Ref: aid_policy.id > aid_application.policy_id
+// 1 : N 提交
+Ref: auth_user.id > aid_application.user_id
+// 1 : N 报修
+Ref: auth_user.id > life_repair_order.user_id

@@ -4,8 +4,8 @@
     <el-col :span="16">
       <el-card shadow="never" header="报到步骤模板">
         <el-table
-          :data="steps"
           v-loading="loading"
+          :data="steps"
           row-key="stepCode"
           stripe
           @expand-change="handleExpand"
@@ -64,7 +64,7 @@
 
 <script setup>
 // 报到管理：步骤模板（可展开材料清单）+ 各学院报到进度
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { getOverview } from '@/api/dashboard'
 import { listMaterials, listSteps } from '@/api/checkin'
 

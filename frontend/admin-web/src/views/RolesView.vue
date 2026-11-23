@@ -7,7 +7,7 @@
         <el-button type="primary" size="small" @click="openCreate">新建角色</el-button>
       </div>
     </template>
-    <el-table :data="groups" v-loading="loading" stripe>
+    <el-table v-loading="loading" :data="groups" stripe>
       <el-table-column prop="code" label="编码" width="160" />
       <el-table-column prop="name" label="名称" width="180" />
       <el-table-column label="内置" width="90">
@@ -35,7 +35,7 @@
 
   <!-- 下半部分：权限矩阵 -->
   <el-card shadow="never" header="权限矩阵" class="section">
-    <el-table :data="matrixRows" v-loading="matrixLoading" border stripe>
+    <el-table v-loading="matrixLoading" :data="matrixRows" border stripe>
       <el-table-column label="模块" width="140" fixed="left">
         <template #default="{ row }">{{ row.moduleName }}</template>
       </el-table-column>
@@ -80,7 +80,6 @@
 <script setup>
 // 角色与权限：用户组增删 + 禅道式权限矩阵（勾选即调 priv 接口）
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   createGroup,
   deleteGroup,
@@ -171,11 +170,19 @@ async function saveCreate() {
 }
 
 async function handleDelete(row) {
-  await ElMessageBox.confirm(`确认删除用户组「${row.name}」？`, '删除确认', { type: 'warning' })
-  await deleteGroup(row.id)
-  ElMessage.success('已删除')
-  loadGroups()
-  loadMatrix()
+  try {
+    await ElMessageBox.confirm(`确认删除用户组「${row.name}」？`, '删除确认', { type: 'warning' })
+  } catch {
+    return // 用户取消
+  }
+  try {
+    await deleteGroup(row.id)
+    ElMessage.success('已删除')
+    loadGroups()
+    loadMatrix()
+  } catch {
+    // 错误提示由拦截器统一处理
+  }
 }
 
 // 勾选/取消授权

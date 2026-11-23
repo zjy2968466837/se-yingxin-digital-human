@@ -23,6 +23,12 @@ public final class HeaderNames {
     /** 令牌前缀 */
     public static final String BEARER_PREFIX = "Bearer ";
 
+    /**
+     * 会话 Cookie 名（Session + Cookie 方案）：HttpOnly，浏览器自动携带，JS 读不到。
+     * 网关优先读它；{@code Authorization: Bearer} 仅保留给开发夹具/API 客户端。
+     */
+    public static final String COOKIE_SESSION = "YX_SESSION";
+
     private HeaderNames() {
     }
 }

@@ -4,8 +4,14 @@
 
 <script setup>
 // ECharts 通用封装：负责 init / setOption / resize / dispose
+// 按需注册：只引入实际用到的图表与组件，避免把整个 echarts（约 1MB）打进包里
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import * as echarts from 'echarts'
+import { init, use } from 'echarts/core'
+import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
 const props = defineProps({
   option: { type: Object, required: true },
@@ -26,7 +32,7 @@ function render() {
 }
 
 onMounted(() => {
-  chart = echarts.init(chartRef.value)
+  chart = init(chartRef.value)
   render()
   window.addEventListener('resize', handleResize)
 })

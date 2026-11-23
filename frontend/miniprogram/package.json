@@ -12,7 +12,10 @@
     "dev:mp-weixin": "uni -p mp-weixin",
     "build:mp-weixin": "uni build -p mp-weixin",
     "dev:h5": "uni",
-    "build:h5": "uni build"
+    "build:h5": "uni build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-5020420260813001",
@@ -24,6 +27,12 @@
   "devDependencies": {
     "@dcloudio/uni-cli-shared": "3.0.0-5020420260813001",
     "@dcloudio/vite-plugin-uni": "3.0.0-5020420260813001",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.12.1",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
     "vite": "5.2.8"
   }
 }

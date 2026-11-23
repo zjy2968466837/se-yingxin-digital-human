@@ -11,7 +11,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 问答会话。
+ * 会话表 qa_session。
+ *
+ * <p>{@code deleted = 0} 表示未删除，删除时写入本行 {@code id}（数据建模 §1.3 / §5.1），
+ * 这样唯一索引末位带 {@code deleted} 时仍可"删除后重建同业务键记录"。
  */
 @Data
 @TableName("qa_session")
@@ -56,6 +59,7 @@ public class QaSession {
 
     /** 逻辑删除：0=未删除；删除时写入本行 id，持久层自动填充 */
     @TableLogic(value = "0", delval = "id")
+
     @TableField(fill = FieldFill.INSERT)
     private Long deleted;
 }

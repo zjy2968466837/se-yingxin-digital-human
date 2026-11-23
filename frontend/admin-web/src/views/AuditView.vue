@@ -1,6 +1,6 @@
 <template>
   <el-card shadow="never">
-    <el-table :data="list" v-loading="loading" stripe>
+    <el-table v-loading="loading" :data="list" stripe>
       <el-table-column prop="ts" label="时间" width="180" />
       <el-table-column prop="operator" label="操作人" width="140" />
       <el-table-column prop="action" label="操作" width="160" />
@@ -35,7 +35,7 @@ async function load() {
   try {
     const res = await listAudit({ page: page.value, size })
     list.value = res.data.list || []
-    total.value = res.data.total || 0
+    total.value = Number(res.data.total) || 0
   } catch {
     // 错误提示由拦截器统一处理
   } finally {

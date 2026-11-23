@@ -29,8 +29,6 @@
 <script setup>
 // 后台整体布局：左侧菜单 + 顶栏（用户名/退出登录）
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { logout as logoutApi } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -38,12 +36,8 @@ const router = useRouter()
 const userStore = useUserStore()
 
 async function handleLogout() {
-  try {
-    await logoutApi()
-  } catch {
-    // 接口失败也继续本地登出
-  }
-  userStore.logout()
+  // store.logout() 内部已调用登出接口并清本地状态，这里不要再单独调一次（否则会发两次请求）
+  await userStore.logout()
   ElMessage.success('已退出登录')
   router.push('/login')
 }

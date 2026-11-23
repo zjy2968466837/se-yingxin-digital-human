@@ -1,45 +1,66 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
+import { logout as logoutApi, me } from '@/api/auth'
 
-// 用户状态：token 同时写 Pinia 与 localStorage（yingxin_token），沿用仓库既有约定
+// 会话状态只放内存：真正的凭证是 HttpOnly Cookie（YX_SESSION），前端读不到，
+// 所以这里不做任何 localStorage 持久化，刷新页面靠 fetchMe() 重新确认。
 export const useUserStore = defineStore('user', () => {
-  const token = ref(localStorage.getItem('yingxin_token') || '')
-  const username = ref(localStorage.getItem('yingxin_username') || '')
-  const role = ref(localStorage.getItem('yingxin_role') || '')
-  const userInfo = ref(safeParse(localStorage.getItem('yingxin_user')))
+  const username = ref('')
+  const realName = ref('')
+  const role = ref('')
+  // checked：本次页面生命周期内是否已经确认过会话状态，避免每次路由跳转都打一次 /me
+  const checked = ref(false)
 
-  const realName = computed(() => userInfo.value?.realName || username.value)
+  /**
+   * 写入当前用户。允许部分字段缺省（如登录响应不含 role），缺省的字段保留原值，
+   * 避免用不完整的数据把已知信息清空。
+   */
+  function setUser(user = {}) {
+    if (user.username !== undefined) username.value = user.username || ''
+    if (user.realName !== undefined) realName.value = user.realName || ''
+    if (user.role !== undefined) role.value = user.role || ''
+    checked.value = true
+  }
 
-  function safeParse(raw) {
+  /** 只清本地状态，不发请求 */
+  function clear() {
+    username.value = ''
+    realName.value = ''
+    role.value = ''
+  }
+
+  /**
+   * 用 /me 确认会话是否有效。
+   * 成功：写入用户信息并返回 true；失败（401 / 网络错误 / 业务码非 0）：清空状态并返回 false。
+   * 无论成功失败都置 checked = true，让守卫下次不再重复请求。
+   */
+  async function fetchMe() {
     try {
-      return raw ? JSON.parse(raw) : null
-    } catch {
-      return null
+      const res = await me()
+      if (res?.code !== 0 || !res.data) {
+        clear()
+        checked.value = true
+        return false
+      }
+      setUser(res.data)
+      return true
+    } catch (e) {
+      clear()
+      checked.value = true
+      return false
     }
   }
 
-  // 登录成功 / 拉取到当前用户信息后调用
-  function setLogin(newToken, name, info) {
-    token.value = newToken
-    username.value = name
-    role.value = info?.role || ''
-    userInfo.value = info || null
-    localStorage.setItem('yingxin_token', newToken)
-    localStorage.setItem('yingxin_username', name)
-    localStorage.setItem('yingxin_role', info?.role || '')
-    localStorage.setItem('yingxin_user', JSON.stringify(info || null))
+  /** 退出登录：调接口让后端删会话/清 Cookie，失败也照样清本地状态 */
+  async function logout() {
+    try {
+      await logoutApi()
+    } catch (e) {
+      // 忽略失败：会话可能已经过期，本地状态必须清干净
+    }
+    clear()
+    checked.value = true
   }
 
-  function logout() {
-    token.value = ''
-    username.value = ''
-    role.value = ''
-    userInfo.value = null
-    localStorage.removeItem('yingxin_token')
-    localStorage.removeItem('yingxin_username')
-    localStorage.removeItem('yingxin_role')
-    localStorage.removeItem('yingxin_user')
-  }
-
-  return { token, username, role, userInfo, realName, setLogin, logout }
+  return { username, realName, role, checked, setUser, fetchMe, logout }
 })

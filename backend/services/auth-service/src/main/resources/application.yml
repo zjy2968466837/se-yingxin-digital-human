@@ -41,6 +41,11 @@ yingxin:
     # 仅本地联调用 `AUTH_FIXTURE_ENABLED=true` 开启；**上云前必须为 false**
     fixture:
       enabled: ${AUTH_FIXTURE_ENABLED:false}
+    # 服务间内部接口凭证（admin-service → 本服务签发令牌）：必须与 admin-service 的 AUTH_INTERNAL_SECRET 一致
+    internal-secret: ${AUTH_INTERNAL_SECRET:yingxin-local-dev-internal-secret-change-me}
+  api-doc:
+    title: 身份核验与个性化迎新服务接口文档
+    description: FR-1 身份核验：学号密码登录、微信登录与会话管理
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
