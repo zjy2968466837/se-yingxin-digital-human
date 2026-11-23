@@ -57,6 +57,11 @@ const routes = [
     component: () => import('@/views/RegisterView.vue'),
     meta: { public: true, title: '注册' },
   },
+  // 兜底：未匹配路径回看板（未登录会被守卫带到登录页），避免布局里 router-view 空白
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/dashboard',
+  },
 ]
 
 const router = createRouter({

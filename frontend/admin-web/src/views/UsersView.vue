@@ -2,7 +2,7 @@
   <el-card shadow="never">
     <el-tabs v-model="activeTab" @tab-change="loadCurrent">
       <el-tab-pane label="待审批" name="pending">
-        <el-table :data="pendingList" v-loading="loading" stripe>
+        <el-table v-loading="loading" :data="pendingList" stripe>
           <el-table-column prop="account" label="账号" width="140" />
           <el-table-column prop="realName" label="姓名" width="120" />
           <el-table-column prop="status" label="账号状态" width="100">
@@ -30,7 +30,7 @@
       </el-tab-pane>
 
       <el-tab-pane label="全部用户" name="all">
-        <el-table :data="userList" v-loading="loading" stripe>
+        <el-table v-loading="loading" :data="userList" stripe>
           <el-table-column prop="id" label="ID" width="70" />
           <el-table-column prop="account" label="账号" width="140" />
           <el-table-column prop="realName" label="姓名" width="120" />
@@ -83,7 +83,6 @@
 <script setup>
 // 用户与审批：待审批 tab + 全部用户 tab，支持通过/驳回/分配角色
 import { onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   approveUser,
   assignUserGroups,
@@ -137,14 +136,22 @@ async function loadGroups() {
 }
 
 async function handleApprove(row, approve) {
-  await ElMessageBox.confirm(
-    `确认${approve ? '通过' : '驳回'}用户「${row.realName || row.account}」的注册申请？`,
-    '审批确认',
-    { type: 'warning' },
-  )
-  await approveUser(row.id, approve)
-  ElMessage.success(approve ? '已通过' : '已驳回')
-  loadCurrent()
+  try {
+    await ElMessageBox.confirm(
+      `确认${approve ? '通过' : '驳回'}用户「${row.realName || row.account}」的注册申请？`,
+      '审批确认',
+      { type: 'warning' },
+    )
+  } catch {
+    return // 用户取消
+  }
+  try {
+    await approveUser(row.id, approve)
+    ElMessage.success(approve ? '已通过' : '已驳回')
+    loadCurrent()
+  } catch {
+    // 错误提示由拦截器统一处理
+  }
 }
 
 function openAssign(row) {

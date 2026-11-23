@@ -76,7 +76,6 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { getCaptcha, login } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -134,12 +133,16 @@ async function handleLogin() {
 
   submitting.value = true
   try {
-    const res = await login({
-      username: form.username.trim(),
-      password: form.password,
-      captchaId: captchaId.value,
-      captchaCode: form.captchaCode.trim(),
-    })
+    const res = await login(
+      {
+        username: form.username.trim(),
+        password: form.password,
+        captchaId: captchaId.value,
+        captchaCode: form.captchaCode.trim(),
+      },
+      // 失败文案由本页展示，禁止拦截器再弹一次
+      { silent: true },
+    )
     if (res.code !== 0) {
       // 2802 验证码错误 / 2803 锁定：HTTP 200 + 业务码，这里负责提示
       ElMessage.error(res.message || '登录失败')

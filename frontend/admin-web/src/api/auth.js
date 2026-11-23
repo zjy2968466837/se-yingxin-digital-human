@@ -9,14 +9,15 @@ export function getCaptcha() {
   return request.get('/admin/auth/captcha')
 }
 
-/** 管理员登录：{ username, password, captchaId, captchaCode } → { username, realName, expiresIn } */
-export function login(data) {
-  return request.post('/admin/auth/login', data)
+/** 管理员登录：{ username, password, captchaId, captchaCode } → { username, realName, expiresIn }
+ *  config.silent=true：失败由登录页自己提示，避免拦截器与页面各弹一次 */
+export function login(data, config) {
+  return request.post('/admin/auth/login', data, config)
 }
 
 /** 管理员注册：{ username, realName, password, confirmPassword, captchaId, captchaCode } → 直接建立会话 */
-export function register(data) {
-  return request.post('/admin/auth/register', data)
+export function register(data, config) {
+  return request.post('/admin/auth/register', data, config)
 }
 
 /** 退出登录：后端删会话并清 Cookie */

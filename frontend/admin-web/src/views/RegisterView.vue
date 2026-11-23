@@ -94,7 +94,6 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { getCaptcha, register } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -190,14 +189,18 @@ async function handleRegister() {
 
   submitting.value = true
   try {
-    const res = await register({
-      username: form.username.trim(),
-      realName: form.realName.trim(),
-      password: form.password,
-      confirmPassword: form.confirmPassword,
-      captchaId: captchaId.value,
-      captchaCode: form.captchaCode.trim(),
-    })
+    const res = await register(
+      {
+        username: form.username.trim(),
+        realName: form.realName.trim(),
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+        captchaId: captchaId.value,
+        captchaCode: form.captchaCode.trim(),
+      },
+      // 失败文案由本页展示，禁止拦截器再弹一次
+      { silent: true },
+    )
     if (res.code !== 0) {
       // 2802 验证码错误 / 2804 用户名已存在：HTTP 200 + 业务码
       ElMessage.error(res.message || '注册失败')
