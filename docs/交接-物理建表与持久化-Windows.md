@@ -2,7 +2,8 @@
 
 > **状态更新（2026-10-27）**：本文 §7 的 S5 样板已落地到 `qa-service`
 > （`QaSession` Entity/Mapper/Service/Controller + Redis 缓存 + 单测），建表已在干净容器验证（24 表 / 0 外键）。
-> 本文保留作为当时的核查快照与操作手册；最新状态以 [AGENTS.md](../AGENTS.md) 为准。
+> 本文保留作为当时的核查快照与操作手册；最新实现状态以 [功能清单](功能清单.md) 为准。
+> 注：文中引用的 `AGENTS.md` 已不再入库，相关描述仅作历史记录。
 >
 > **补记（2026-11-03）**：云库（CloudBase MySQL）已按本文顺序执行到第 **10** 个脚本并校验通过——
 > 24 表 / 0 外键 / 全 InnoDB / 表名全小写，三处增量均在位（`content_article.guide_type`+`contact`、

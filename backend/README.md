@@ -6,7 +6,7 @@ Java 17 + Spring Boot 3 微服务架构。
 
 ```
 backend/
-├── pom.xml                   # Maven 父 POM（聚合 9 个服务，统一版本与依赖管理）
+├── pom.xml                   # Maven 父 POM（聚合 10 个服务，统一版本与依赖管理）
 ├── docker-compose.yml        # 本地 MySQL 8 + Redis 7（版本与云端对齐）
 ├── docker-compose.prod.yml   # 云上只编排后端服务（MySQL/Redis 用 Azure 托管资源）
 ├── .dockerignore
