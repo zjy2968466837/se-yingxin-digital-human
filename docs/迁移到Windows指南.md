@@ -268,7 +268,7 @@ docker compose ps
 
 ### 5.1 首次初始化数据库
 
-`init-sql/01-init.sql` 只做 `CREATE DATABASE`。**24 张表要手工执行迁移脚本**（Flyway 尚未接入，见 `AGENTS.md`）。
+`init-sql/01-init.sql` 只做 `CREATE DATABASE`。表结构由 Flyway 迁移创建：`./mvnw -Pdb -pl . flyway:migrate`（见 [本地启动指引](本地启动指引.md)）；已有结构的库先基线化。
 
 目录里现有 **9 个脚本**，其中 7 个建表、2 个改表（加列、加索引）：
 

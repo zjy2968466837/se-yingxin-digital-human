@@ -8,8 +8,8 @@
 |--------|--------|------|
 | 学生端网页（主入口，移动浏览器优先） | uni-app 3 + Vue3（取 H5 构建产物；工程方案待定，见《需求分析文档》附录 B Q-9） | `frontend/miniprogram` |
 | 管理后台（学校运维） | Vue3 + Vite 8 + Element Plus | `frontend/admin-web` |
-| 后端微服务 | Java 17 + Spring Boot 3.5 + Spring Cloud 2025（9 个服务，Maven 多模块） | `backend/services` |
-| 基础设施 | 本地 Docker `mysql:8.0.46` + `redis:7.0.15-alpine`；云端 Azure MySQL PaaS + VM Redis 7.0.15 | `backend/docker-compose.yml` |
+| 后端微服务 | Java 17 + Spring Boot 3.5 + Spring Cloud 2025（10 个服务，Maven 多模块） | `backend/services` |
+| 基础设施 | 本地 Docker `mysql:8.0.46` + `redis:7.0.15-alpine` + `rabbitmq:3.13-management`；云端 MySQL（CloudBase / Azure）+ Redis + RabbitMQ | `backend/docker-compose.yml` |
 
 > 本地与云上共用同一份配置，只靠环境变量区分（代码零改动）。版本基线详见
 > [docs/开发规范.md](docs/开发规范.md) §10，云端编排见 [`backend/docker-compose.prod.yml`](backend/docker-compose.prod.yml)。
@@ -27,38 +27,39 @@
 9. 管理后台（话术配置、问答库管理、数据统计、分权维护）
 10. 双端适配（学生端网页 + 管理后台；小程序 / H5 / 官网嵌入 / PC 大屏等多端方案已裁剪，见《需求分析文档》§8.4.1）
 
-## 当前实现进度（feat/core-chain 分支）
+## 当前实现进度（2026-11-23 按代码逐项核对）
 
-核心链路已可端到端演示：
+逐项状态见 [功能清单](docs/功能清单.md) §2 与 §8 缺口统计，下表是模块级概览。
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| 统一鉴权（auth-service） | 已完成 | 学号/后台登录、JWT + Redis 会话（复用脚手架 JwtService/SessionService）、注册→审批流 |
-| 禅道式 RBAC 权限中心 | 已完成 | user→group→grouppriv 模型、权限矩阵在线调整、审计日志、鉴权链路追踪 |
-| 网关统一鉴权（gateway） | 已完成 | 脚手架 AuthGlobalFilter 基础上放行 /api/auth/register |
-| 报到服务（checkin-service） | 已完成 | 步骤清单、幂等打卡、进度、报到凭证 |
-| 问答服务（qa-service） | 已完成 | 问答库检索（2-gram 相似度）、Redis 热点缓存、未解答记录、管理端 CRUD |
-| 消息队列事件流 | 已完成 | RabbitMQ 事件队列 + event-worker 攒批落库 + 重试 3 次进死信队列 |
-| 数据看板（admin-service） | 已完成 | KPI/分时趋势/学院进度/热门问题/命中分布，Redis 版本号缓存 5 秒轮询 |
-| 管理后台（admin-web） | 已完成 | 登录、数据看板、用户审批、角色与权限矩阵、问答库、报到管理、审计日志 |
-| 导航/资助/生活/内容 | 骨架 | ping 接口，按接口文档待实现 |
+| 统一鉴权（auth-service） | 可用 | 学号 / 管理员登录、JWT + Redis 会话、注册→审批流；管理员另一条链路走 HttpOnly Cookie |
+| 禅道式 RBAC 权限中心 | 可用 | user→group→grouppriv、权限矩阵在线调整、审计日志、鉴权链路追踪；**无"本学院"数据权限** |
+| 网关统一鉴权（gateway） | 可用 | Cookie 优先 / Bearer 兼容、先剥离伪造头再注入、`/api/admin/**` 强制 ADMIN |
+| 报到服务（checkin-service） | 可用 | 步骤清单、幂等打卡、进度、报到凭证（无二维码图片与核销接口） |
+| 问答服务（qa-service） | 可用 | 2-gram 相似度检索、Redis 热点缓存、未解答记录、管理端 CRUD；无多轮 / 意图 / LLM 兜底 |
+| 事件流（event-worker） | 可用 | RabbitMQ 队列 + 攒批落库 + 重试 3 次进死信；**需求文档未纳入，属超范围引入** |
+| 数据看板（admin-service） | 可用 | KPI / 分时趋势 / 学院进度 / 热问 / 命中分布 + Redis 版本号缓存；缺导航热点与未解决率 |
+| 管理后台（admin-web） | 可用 | 登录 / 注册、看板、用户审批、角色权限矩阵、问答库 CRUD、报到管理、审计日志 |
+| 学生端网页（H5） | 部分 | 登录 / 报到 / 问答 / 首页 / 我的；**无数字人形象，无缴费 / 绿色通道 / 异常指引** |
+| 导航 / 资助 / 生活 / 内容 | 骨架 | 仅 ping；`content-service` 另有通用文件接口 `/api/content/files/**` |
 
-表结构变更已同步 [docs/数据建模.md](docs/数据建模.md) §10「二期新增表」。
+表结构：30 张业务表（11 个 Flyway 迁移脚本），二期新增表见 [数据建模](docs/数据建模.md) §10。
 
 ## 快速启动（本地演示）
 
-前置：JDK 17+、Node 22+、pnpm、Docker Desktop。
+前置：JDK 17+、Node 22+、pnpm、Docker Desktop。完整步骤（每步带验证命令）见
+[**本地启动指引**](docs/本地启动指引.md)；核心顺序是：
 
 ```bash
-cd backend
-scripts/start-dev.cmd          # 基础设施(MySQL/Redis/RabbitMQ) + Flyway 迁移 + 7 个服务
-# 可选：灌入演示数据（40 名新生、历史报到/问答埋点），看板数据更饱满
+cd backend && docker compose up -d                        # MySQL / Redis / RabbitMQ
+./mvnw -Pdb -pl . flyway:migrate                          # 建表（连接参数只走环境变量）
 docker exec -i yingxin-mysql mysql -uyingxin -pyingxin123 yingxin < scripts/seed-demo-data.sql
-docker exec yingxin-redis redis-cli INCR yx:admin:dash:version
-# 可选：模拟一批新生真实登录/打卡/提问（事件经 MQ → worker → 看板刷新）
-node scripts/demo-load.mjs 12
+docker exec yingxin-redis redis-cli INCR yx:admin:dash:version   # 让看板缓存失效
 
-cd ../frontend/admin-web && pnpm install && pnpm dev   # http://localhost:5173
+java -jar services/gateway/target/gateway-1.0.0-SNAPSHOT.jar      # 其余服务同理，见指引
+cd ../frontend/admin-web && pnpm install && pnpm dev      # http://localhost:5173
+cd ../frontend/miniprogram && pnpm install && pnpm dev:h5 # http://localhost:5174（学生端）
 ```
 
 演示账号（密码均为 `123456`）：`admin`（管理员入口）、`ST2026001`–`ST2026040`（学生）、
@@ -72,9 +73,9 @@ RabbitMQ 控制台 http://localhost:15672（guest/guest）。
 - [需求规格说明书](docs/需求规格说明书.md)（立项阶段原始需求 v1.0，范围调整以需求分析文档为准）
 - [需求分析文档](docs/需求分析文档.md)（FR / NFR / IR / DR 编号体系 + 追踪矩阵；**§2.7 里程碑 / 分工 / 风险**、**§8.4 范围裁剪**；9 张架构图已嵌入）
 - [功能清单与分解](docs/功能清单.md)（按模块拆分的功能项，含 ID/优先级/状态，可直接用于 Issue 拆分）
-- [数据建模](docs/数据建模.md)（**一期 24 张表**字段级定义 + ER 图 + 唯一键与状态机 + 无外键下的完整性对策 + 数据字典）／模型文件 [数据建模.dbml](docs/数据建模.dbml)（导入 dbdiagram.io 出图并导出 DDL）
+- [数据建模](docs/数据建模.md)（**一期 24 张 + 二期 6 张 = 30 张表**字段级定义 + ER 图 + 唯一键与状态机 + 无外键下的完整性对策 + 数据字典）／模型文件 [数据建模.dbml](docs/数据建模.dbml)（导入 dbdiagram.io 出图并导出 DDL）
 - [MySQL 存储引擎与执行计划](docs/MySQL存储引擎与执行计划.md)（页/行格式/表空间、引擎选型与参数基线、EXPLAIN 判读与 9 个实测计划、查询计划可视化、数据规划架构）
-- [数据表存储结构规划](docs/数据表存储结构规划.md)（24 张表的引擎/行格式/索引/页数与容量估算、大字段溢出、分区与归档）
+- [数据表存储结构规划](docs/数据表存储结构规划.md)（各表的引擎/行格式/索引/页数与容量估算、大字段溢出、分区与归档）
 - [文件存储与分片上传方案](docs/文件存储与分片上传方案.md)（SeaweedFS/rclone/OSS 多后端、分片上传后台重组、秒传与 SHA-256 校验、开源文件服务器源码笔记）
 - [禅道角色权限与表结构分析](docs/禅道角色权限与表结构分析.md)（自建只读角色实测、用户-组-权限点模型、zt_* 表结构与判定流程）
 - [接口文档索引](docs/api/接口文档索引.md)（8 个服务的 OpenAPI 产物与 Swagger UI 入口，由脚本自动生成）

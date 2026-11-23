@@ -1,6 +1,7 @@
 # MySQL 存储引擎与执行计划
 
 > **文档定位**：补齐 2026-09-22 任务清单中的数据库底层项——MySQL 存储结构、存储引擎两类与参数配置、执行计划、查询计划可视化；建表与逐表存储规划见 [数据表存储结构规划](数据表存储结构规划.md)。
+> **口径说明（2026-11-23）**：本文中的规模数字是 2026-10-27 的实测快照（当时 24 张表 / 9 个服务）；当前为 **30 张表 / 10 个服务**（新增二期 RBAC 6 张表与 `event-worker`），迁移脚本 11 个。原理与参数部分不受影响。
 > **实测环境**：`mysql:8.0.46`（与 [docker-compose.yml](../backend/docker-compose.yml) 同一镜像），2026-10-27；24 张表由 `backend/db/migration/` 的 9 个脚本建立，物理外键 0 个。
 > **可复跑**：命令见 §5.7 与附录 A，现成脚本 [`scripts/explain_checks.sql`](../scripts/explain_checks.sql)，原始计划 JSON 与渲染结果在 [`docs/assets/explain/`](assets/explain/)。
 
