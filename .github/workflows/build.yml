@@ -69,6 +69,10 @@ jobs:
         working-directory: frontend/admin-web
         run: pnpm install --frozen-lockfile
 
+      - name: 代码检查（ESLint）
+        working-directory: frontend/admin-web
+        run: pnpm lint
+
       - name: 构建
         working-directory: frontend/admin-web
         run: pnpm build
@@ -95,6 +99,10 @@ jobs:
       - name: 安装依赖
         working-directory: frontend/miniprogram
         run: pnpm install --frozen-lockfile
+
+      - name: 代码检查（ESLint）
+        working-directory: frontend/miniprogram
+        run: pnpm lint
 
       - name: 构建学生端网页（H5）
         working-directory: frontend/miniprogram
