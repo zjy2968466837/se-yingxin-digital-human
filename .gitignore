@@ -43,6 +43,9 @@ Thumbs.db
 # AI 编码工具的工作目录（导出中间产物，不入库）
 .codebuddy/
 
+# AI 编码代理的说明文件：只在本机使用，不作为交付文件入库
+AGENTS.md
+
 # 敏感配置（API Key、数据库密码等）
 application-local.yml
 application-prod.yml
