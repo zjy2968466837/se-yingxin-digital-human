@@ -35,6 +35,24 @@ export function clearAuth() {
   uni.removeStorageSync(QA_SESSION_KEY)
 }
 
+// 非 2xx 时的兜底文案：403 常见于来源未进网关 CORS 白名单，502 常见于后端没起
+const HTTP_HINT = {
+  400: '请求参数有误',
+  403: '没有访问权限（也可能是本站来源未加入网关白名单）',
+  404: '接口不存在，可能前后端版本不一致',
+  429: '请求过于频繁，请稍后再试',
+  500: '服务内部错误，请稍后重试',
+  502: '网关连不上后端服务，请确认服务已启动',
+  503: '服务暂不可用，请稍后重试',
+  504: '后端服务响应超时',
+}
+
+function httpHint(status, body) {
+  const backendMsg = body && typeof body === 'object' ? body.message : ''
+  if (backendMsg) return backendMsg
+  return HTTP_HINT[status] || `请求失败（HTTP ${status}）`
+}
+
 // 防止并发 401 时反复 reLaunch
 let redirecting = false
 function redirectToLogin() {
@@ -82,7 +100,7 @@ export function request(options = {}) {
           return
         }
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          uni.showToast({ title: `请求失败 ${res.statusCode}`, icon: 'none' })
+          uni.showToast({ title: httpHint(res.statusCode, body), icon: 'none' })
           reject(res)
           return
         }

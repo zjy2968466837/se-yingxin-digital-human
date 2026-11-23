@@ -15,6 +15,18 @@ export function setUnauthorizedHandler(fn) {
   unauthorizedHandler = fn
 }
 
+// 非 2xx 的兜底文案：403 常见于来源未进网关 CORS 白名单，502 常见于后端没起
+const HTTP_HINT = {
+  400: '请求参数有误',
+  403: '没有访问权限（也可能是本站来源未加入网关白名单）',
+  404: '接口不存在，可能前后端版本不一致',
+  429: '请求过于频繁，请稍后再试',
+  500: '服务内部错误，请稍后重试',
+  502: '网关连不上后端服务，请确认服务已启动',
+  503: '服务暂不可用，请稍后重试',
+  504: '后端服务响应超时',
+}
+
 request.interceptors.response.use(
   (response) => response.data,
   (error) => {
@@ -33,7 +45,9 @@ request.interceptors.response.use(
 
     // silent=true 表示调用方自己负责提示（登录/注册），避免同一错误弹两次
     if (!silent) {
-      ElMessage.error(error?.response?.data?.message || '请求失败，请稍后重试')
+      ElMessage.error(
+        error?.response?.data?.message || HTTP_HINT[status] || '请求失败，请稍后重试',
+      )
     }
     return Promise.reject(error)
   },
