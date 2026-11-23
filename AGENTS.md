@@ -2,42 +2,30 @@
 
 本文件供 AI 编码代理使用。项目概览、核心功能与文档索引见 [README.md](README.md)，从零搭环境见 [docs/环境搭建指南.md](docs/环境搭建指南.md)。
 
-## 与用户协作的输出约定（AI 必读）
-
-- **改文件前先说明方向**：改哪个文件、改什么、为什么改，然后才动手。不允许连着改很多处、用户完全不知道改动方向。
-- **过程同步进度**：每个阶段用一两句话说明"做到哪一步、下一步做什么"，不要长时间静默。
-- **范围不确定时先问**：例如"改 main 还是改合并分支"这类选择，先给选项与推荐再等确认，不要自行扩大改动范围。
-
 ## 当前实现状态（写代码前必读）
 
 仓库仍处于**骨架阶段**。以下基础设施**尚不存在**，不要假设可以直接调用：
 
 - 后端：每个服务都有 `XxxApplication` 启动类 + `PingController` 自检接口（已返回统一响应体）；
   **S5 纵向样板已在 `qa-service` 落地**（`QaSession` Entity / Mapper / Service / Controller + Redis 缓存 + 单测），
-  `admin-service` 已落地管理员登录（F9.1：验证码 + BCrypt + 内部接口签发令牌），其余服务仍只有启动类与 ping。
-  `auth-service` 只有 JWT 签发/会话能力、内部签发接口与开发夹具，**没有** `AuthUser` 实体或 MySQL 持久化代码。
+  其余服务仍只有启动类与 ping。`auth-service` 只有 JWT 签发/会话能力与开发夹具，**没有** `AuthUser` 实体或 MySQL 持久化代码。
   横向能力由公共模块提供：统一响应体 / 错误码 / 全局异常 / traceId / 用户上下文 / MP·Redis·Jackson / OpenAPI 元信息（`common-web`），
   文件存储抽象（`common-file`：本地 / S3 兼容 / 阿里云 OSS）。
   **仍缺**：其余服务的 Service / Mapper / Entity 分层与业务代码、前端仍是静态页、业务集成测试。
 - 文件能力（2026-10-27 落地）：`common-file` + `content-service` 的 `/api/content/files/**`（批量上传 / 分片上传与后台重组 /
   下载 / 删除 / 批量临时地址）；存储后端由 `yx.file.provider=local|minio|oss` 选择，本地验收用 S3 兼容服务
   （MinIO 社区版已归档；主选 SeaweedFS 4.51，rclone serve s3 保底；见 [docs/文件存储与分片上传方案.md](docs/文件存储与分片上传方案.md)）。
-- 鉴权：**Session + Cookie（有状态）** —— 浏览器持有 HttpOnly Cookie `YX_SESSION`（不透明 sessionId，SameSite=Lax，云端 Secure），
-  `auth-service` 在 Redis 存 `sessionId → userId/role`（TTL 2h）；网关 `AuthGlobalFilter` 先剥离入站 `X-User-*`，
-  再按 Cookie 查会话（兼容 `Authorization: Bearer` 夹具），注入用户上下文，并对 `/api/admin/**` 做 ADMIN 授权校验；
-  **登出即删会话键 + 清 Cookie，旧 Cookie 立即失效**。
-  管理员认证（F9.1，2026-11-10）：`admin-service` 的 `/api/admin/auth/captcha`、`/login`、`/register`、`/logout`、`/me`
-  （图形验证码 + BCrypt；会话由内部接口 `POST /api/auth/internal/session` 创建，`X-Internal-Secret`，不经网关）；
-  `admin-web` 登录/注册页已接真实接口，**前端不存令牌**。自助注册默认开启，**上云前必须 `AUTH_REGISTER_ENABLED=false`**。
-  学生端登录（F1.1）仍未实现，本地验证仍靠开发夹具：
-  `POST http://localhost:8100/api/dev/token?userId=123&role=STUDENT` 与 `DELETE .../api/dev/session/{jti}`，
-  默认关闭（`AUTH_FIXTURE_ENABLED=true`），只能直连 8100；业务登录（F1.1）实现后删除夹具。
+- 鉴权：**已打通（S3）** —— `auth-service` 签发 JWT（HS256，负载只放 `userId`/`role`，会话 `jti→userId/role` 存 Redis，TTL 2h）；
+  网关 `AuthGlobalFilter` 剥离入站 `X-User-*` 后校验签名与会话，再注入用户上下文；**登出即删会话键，旧令牌立即失效**。
+  **本地联调入口是夹具、不是登录接口**：`POST http://localhost:8100/api/dev/token?userId=123&role=STUDENT`（签发）
+  与 `DELETE http://localhost:8100/api/dev/session/{jti}`（等价登出）。默认关闭，需 `AUTH_FIXTURE_ENABLED=true` 启动 auth-service；
+  该路径**不在网关白名单**，只能直连 8100；业务登录（F1.1）在业务阶段实现，实现后删除夹具。
 - 数据库：**迁移脚本已就位** —— `backend/db/migration/V<时间戳>__<服务简称>_<说明>.sql`（**10 个文件** = 7 个 init + 3 个增量，合计 **24 张表**），2026-10-27 已在干净容器上按版本号顺序验证建表通过（24 表 / 0 外键 / 全 InnoDB）；2026-11-03 新增增量把 `auth_user.password_hash` 收紧为 `NOT NULL`（全量账号必填 BCrypt 散列，见 [docs/数据建模.md](docs/数据建模.md) §8.2.1）。
   Flyway 已接入（父 pom `db` profile + `scripts/db-migrate.sh`，`-pl .` 只在聚合工程执行）；云库已基线化到 `20261103120001`，
   库里多出 `flyway_schema_history`（1 行 baseline，**不计入 24 张业务表**）；此后结构变更一律 `./mvnw -Pdb -pl . flyway:migrate`。
   `backend/init-sql/01-init.sql` 仍只执行 `CREATE DATABASE`。
-- 前端：`admin-web` 登录页已接真实接口（验证码 + BCrypt，F9.1），`QaView.vue` 是 qa 会话联调页，仍无列表/表单等 CRUD 范例可抄；
-  `miniprogram` 只注册了首页与「我的」两个页面（学生端登录页未做）。
+- 前端：`admin-web` 只有登录页与连通性自检页（`QaView.vue` 是空占位），没有列表/表单等 CRUD 范例可抄；
+  `miniprogram` 只注册了首页与「我的」两个页面。
 
 补充这些基础设施时，请先按 [docs/开发规范.md](docs/开发规范.md) 定下的横向能力框架落地，**不要在每个服务里各写一套**。
 该文档已确定：`common-core` + `common-web` 两模块划分（网关是 WebFlux、业务服务是 MVC，不可混用同一个公共模块）、
